@@ -11,9 +11,10 @@ The library is meant to have an interface similar to `std::vec::Vec`:
 
     let mut l = NonEmpty::new(42);
 
-    assert_eq!(l.first(), 42);
+    assert_eq!(l.first(), &42);
 
     l.push(36);
     l.push(58);
 
-    assert_eq!(l.into::<Vec<_>>(), vec![42, 36, 58]);
+    let v: Vec<i32> = l.into();
+    assert_eq!(v, vec![42, 36, 58]);
