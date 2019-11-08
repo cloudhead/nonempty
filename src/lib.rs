@@ -19,11 +19,11 @@
 pub struct NonEmpty<T>(T, Vec<T>);
 
 impl<T> NonEmpty<T> {
-    pub fn new(e: T) -> Self {
+    pub const fn new(e: T) -> Self {
         Self::singleton(e)
     }
 
-    pub fn singleton(e: T) -> Self {
+    pub const fn singleton(e: T) -> Self {
         NonEmpty(e, Vec::new())
     }
 
