@@ -82,7 +82,21 @@ impl<T> NonEmpty<T> {
         self.1.truncate(len - 1);
     }
 
-    pub fn iter<'a>(&'a self) -> impl Iterator + 'a {
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let mut l = NonEmpty::new(42);
+    /// l.push(36);
+    /// l.push(58);
+    ///
+    /// let mut l_iter = l.iter();
+    ///
+    /// assert_eq!(l_iter.next(), Some(&42));
+    /// assert_eq!(l_iter.next(), Some(&36));
+    /// assert_eq!(l_iter.next(), Some(&58));
+    /// assert_eq!(l_iter.next(), None);
+    /// ```
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = &T> + 'a {
         std::iter::once(&self.0).chain(self.1.iter())
     }
 }
