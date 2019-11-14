@@ -111,6 +111,25 @@ impl<T> NonEmpty<T> {
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = &T> + 'a {
         std::iter::once(&self.0).chain(self.1.iter())
     }
+
+    /// Append a `Vec` to the tail of the `NonEmpty`.
+    ///
+    /// # Example Use
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let mut non_empty = NonEmpty::new(1);
+    /// let mut vec = vec![2, 3, 4, 5];
+    /// non_empty.append(&mut vec);
+    ///
+    /// let mut expected = NonEmpty::new(1);
+    /// [2, 3, 4, 5].iter().for_each(|i| expected.push(*i));
+    ///
+    /// assert_eq!(non_empty, expected);
+    pub fn append(&mut self, other: &mut Vec<T>) {
+        self.1.append(other)
+    }
 }
 
 impl<T> Into<Vec<T>> for NonEmpty<T> {
