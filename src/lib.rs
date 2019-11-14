@@ -128,14 +128,13 @@ impl<T> NonEmpty<T> {
     /// let empty_vec: Option<NonEmpty<&u32>> = NonEmpty::from_slice(&[]);
     /// assert!(empty_vec.is_none());
     /// ```
-    pub fn from_slice(slice: &[T]) -> Option<NonEmpty<&T>> {
+    pub fn from_slice(slice: &[T]) -> Option<NonEmpty<T>>
+    where
+        T: Clone,
+    {
         let split = slice.split_first();
         match split {
-            Some((h, t)) => {
-                let mut result: NonEmpty<&T> = NonEmpty::new(h);
-                t.iter().for_each(|u| result.push(u));
-                Some(result)
-            }
+            Some((h, t)) => Some(NonEmpty(h.clone(), t.into())),
             None => None,
         }
     }
