@@ -112,7 +112,7 @@ impl<T> NonEmpty<T> {
         std::iter::once(&self.0).chain(self.1.iter())
     }
 
-    /// Often we have a `Vec` but want to ensure that it is `NonEmpty` before
+    /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is `NonEmpty` before
     /// proceeding with a computation. Using `from_vec` will give us a proof
     /// that we have a `NonEmpty` in the `Some` branch, otherwise it allows
     /// the caller to handle the `None` case.
@@ -122,21 +122,18 @@ impl<T> NonEmpty<T> {
     /// ```
     /// use nonempty::NonEmpty;
     ///
-    /// let non_empty_vec = NonEmpty::from_vec(vec!([1, 2, 3, 4, 5]));
+    /// let non_empty_vec = NonEmpty::from_vec(&[1, 2, 3, 4, 5]);
     /// assert!(non_empty_vec.is_some());
     ///
-    /// let empty_vec: Option<NonEmpty<u32>> = NonEmpty::from_vec(Vec::new());
+    /// let empty_vec: Option<NonEmpty<&u32>> = NonEmpty::from_vec(&[]);
     /// assert!(empty_vec.is_none());
     /// ```
-    pub fn from_vec(vec: Vec<T>) -> Option<NonEmpty<T>> {
-        let mut vec = vec;
-        let head = vec.pop();
-        match head {
-            Some(t) => {
-                let mut result = NonEmpty::new(t);
-                for u in vec {
-                    result.push(u)
-                }
+    pub fn from_vec(vec: &[T]) -> Option<NonEmpty<&T>> {
+        let split = vec.split_first();
+        match split {
+            Some((h, t)) => {
+                let mut result: NonEmpty<&T> = NonEmpty::new(h);
+                t.iter().for_each(|u| result.push(u));
                 Some(result)
             }
             None => None,
