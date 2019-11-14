@@ -125,19 +125,21 @@ impl<T> NonEmpty<T> {
     /// [2, 3, 4, 5].iter().for_each(|i| non_empty.push(*i));
     ///
     /// // Guaranteed to have the head and we also get the tail.
-    /// assert_eq!(non_empty.split_first(), (1, vec![2, 3, 4, 5]));
+    /// assert_eq!(non_empty.split_first(), (&1, &[2, 3, 4, 5][..]));
     ///
     /// let non_empty = NonEmpty::new(1);
     ///
     /// // Guaranteed to have the head element.
-    /// assert_eq!(non_empty.split_first(), (1, vec![]));
+    /// assert_eq!(non_empty.split_first(), (&1, &[][..]));
     /// ```
-    pub fn split_first(self) -> (T, Vec<T>) {
-        (self.0, self.1)
+    pub fn split_first(&self) -> (&T, &[T]) {
+        (&self.0, &self.1)
     }
 
-    /// Deconstruct a `NonEmpty` into its last element
-    /// and the prefix elements.
+    /// Deconstruct a `NonEmpty` into its first, last, and
+    /// middle elements, in that order.
+    ///
+    /// If there is only one element then first == last.
     ///
     /// # Example Use
     ///
@@ -149,24 +151,17 @@ impl<T> NonEmpty<T> {
     ///
     /// // Guaranteed to have the last element and the elements
     /// // preceding it.
-    /// assert_eq!(non_empty.split_last(), (5, vec![1, 2, 3, 4]));
+    /// assert_eq!(non_empty.split(), (&1, &[2, 3, 4][..], &5));
     ///
     /// let non_empty = NonEmpty::new(1);
     ///
     /// // Guaranteed to have the last element.
-    /// assert_eq!(non_empty.split_last(), (1, vec![]));
+    /// assert_eq!(non_empty.split(), (&1, &[][..], &1));
     /// ```
-    pub fn split_last(self) -> (T, Vec<T>)
-    where
-        T: Clone,
-    {
+    pub fn split(&self) -> (&T, &[T], &T) {
         match self.1.split_last() {
-            None => (self.0, vec![]),
-            Some((last, first)) => {
-                let mut vec: Vec<T> = first.into();
-                vec.insert(0, self.0);
-                (last.clone(), vec)
-            }
+            None => (&self.0, &[], &self.0),
+            Some((last, middle)) => (&self.0, middle, last),
         }
     }
 
