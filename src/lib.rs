@@ -135,6 +135,40 @@ impl<T> NonEmpty<T> {
     pub fn split_first(self) -> (T, Vec<T>) {
         (self.0, self.1)
     }
+
+    /// Deconstruct a `NonEmpty` into its last element
+    /// and the prefix elements.
+    ///
+    /// # Example Use
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let mut non_empty = NonEmpty::new(1);
+    /// [2, 3, 4, 5].iter().for_each(|i| non_empty.push(*i));
+    ///
+    /// // Guaranteed to have the last element and the elements
+    /// // preceding it.
+    /// assert_eq!(non_empty.split_last(), (5, vec![1, 2, 3, 4]));
+    ///
+    /// let non_empty = NonEmpty::new(1);
+    ///
+    /// // Guaranteed to have the last element.
+    /// assert_eq!(non_empty.split_last(), (1, vec![]));
+    /// ```
+    pub fn split_last(self) -> (T, Vec<T>)
+    where
+        T: Clone,
+    {
+        match self.1.split_last() {
+            None => (self.0, vec![]),
+            Some((last, first)) => {
+                let mut vec: Vec<T> = first.into();
+                vec.insert(0, self.0);
+                (last.clone(), vec)
+            }
+        }
+    }
 }
 
 impl<T> Into<Vec<T>> for NonEmpty<T> {
