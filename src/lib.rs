@@ -113,7 +113,7 @@ impl<T> NonEmpty<T> {
     }
 
     /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is `NonEmpty` before
-    /// proceeding with a computation. Using `from_vec` will give us a proof
+    /// proceeding with a computation. Using `from_slice` will give us a proof
     /// that we have a `NonEmpty` in the `Some` branch, otherwise it allows
     /// the caller to handle the `None` case.
     ///
@@ -122,14 +122,14 @@ impl<T> NonEmpty<T> {
     /// ```
     /// use nonempty::NonEmpty;
     ///
-    /// let non_empty_vec = NonEmpty::from_vec(&[1, 2, 3, 4, 5]);
+    /// let non_empty_vec = NonEmpty::from_slice(&[1, 2, 3, 4, 5]);
     /// assert!(non_empty_vec.is_some());
     ///
-    /// let empty_vec: Option<NonEmpty<&u32>> = NonEmpty::from_vec(&[]);
+    /// let empty_vec: Option<NonEmpty<&u32>> = NonEmpty::from_slice(&[]);
     /// assert!(empty_vec.is_none());
     /// ```
-    pub fn from_vec(vec: &[T]) -> Option<NonEmpty<&T>> {
-        let split = vec.split_first();
+    pub fn from_slice(slice: &[T]) -> Option<NonEmpty<&T>> {
+        let split = slice.split_first();
         match split {
             Some((h, t)) => {
                 let mut result: NonEmpty<&T> = NonEmpty::new(h);
