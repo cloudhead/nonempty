@@ -132,11 +132,9 @@ impl<T> NonEmpty<T> {
     where
         T: Clone,
     {
-        let split = slice.split_first();
-        match split {
-            Some((h, t)) => Some(NonEmpty(h.clone(), t.into())),
-            None => None,
-        }
+        slice
+            .split_first()
+            .map(|(h, t)| NonEmpty(h.clone(), t.into()))
     }
 }
 
