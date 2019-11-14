@@ -111,6 +111,30 @@ impl<T> NonEmpty<T> {
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = &T> + 'a {
         std::iter::once(&self.0).chain(self.1.iter())
     }
+
+    /// Deconstruct a `NonEmpty` into its head and tail.
+    /// This operation never fails since we are guranteed
+    /// to have a head element.
+    ///
+    /// # Example Use
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let mut non_empty = NonEmpty::new(1);
+    /// [2, 3, 4, 5].iter().for_each(|i| non_empty.push(*i));
+    ///
+    /// // Guaranteed to have the head and we also get the tail.
+    /// assert_eq!(non_empty.split_first(), (1, vec![2, 3, 4, 5]));
+    ///
+    /// let non_empty = NonEmpty::new(1);
+    ///
+    /// // Guaranteed to have the head element.
+    /// assert_eq!(non_empty.split_first(), (1, vec![]));
+    /// ```
+    pub fn split_first(self) -> (T, Vec<T>) {
+        (self.0, self.1)
+    }
 }
 
 impl<T> Into<Vec<T>> for NonEmpty<T> {
