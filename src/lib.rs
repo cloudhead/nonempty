@@ -112,6 +112,31 @@ impl<T> NonEmpty<T> {
         std::iter::once(&self.0).chain(self.1.iter())
     }
 
+    /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is `NonEmpty` before
+    /// proceeding with a computation. Using `from_slice` will give us a proof
+    /// that we have a `NonEmpty` in the `Some` branch, otherwise it allows
+    /// the caller to handle the `None` case.
+    ///
+    /// # Example Use
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let non_empty_vec = NonEmpty::from_slice(&[1, 2, 3, 4, 5]);
+    /// assert!(non_empty_vec.is_some());
+    ///
+    /// let empty_vec: Option<NonEmpty<&u32>> = NonEmpty::from_slice(&[]);
+    /// assert!(empty_vec.is_none());
+    /// ```
+    pub fn from_slice(slice: &[T]) -> Option<NonEmpty<T>>
+    where
+        T: Clone,
+    {
+        slice
+            .split_first()
+            .map(|(h, t)| NonEmpty(h.clone(), t.into()))
+    }
+
     /// Deconstruct a `NonEmpty` into its head and tail.
     /// This operation never fails since we are guranteed
     /// to have a head element.
