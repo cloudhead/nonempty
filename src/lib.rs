@@ -15,7 +15,7 @@
 //! let v: Vec<i32> = l.into();
 //! assert_eq!(v, vec![42, 36, 58]);
 //! ```
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NonEmpty<T>(T, Vec<T>);
 
 impl<T> NonEmpty<T> {
