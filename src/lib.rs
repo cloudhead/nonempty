@@ -208,6 +208,33 @@ impl<T> NonEmpty<T> {
     pub fn append(&mut self, other: &mut Vec<T>) {
         self.1.append(other)
     }
+
+    /// A structure preserving `map`. This is useful for when
+    /// we wish to keep the `NonEmpty` structure guaranteeing
+    /// that there is at least one element. Otherwise, we can
+    /// use `nonempty.iter().map(f)`.
+    ///
+    /// # Example Use
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let mut non_empty = NonEmpty::new(1);
+    /// let mut vec = vec![2, 3, 4, 5];
+    /// non_empty.append(&mut vec);
+    ///
+    /// let squares = non_empty.map(|i| i * i);
+    ///
+    /// let mut expected = NonEmpty::new(1);
+    /// expected.append(&mut vec![4, 9, 16, 25]);
+    ///
+    /// assert_eq!(squares, expected);
+    pub fn map<U, F>(self, mut f: F) -> NonEmpty<U>
+    where
+        F: FnMut(T) -> U,
+    {
+        NonEmpty(f(self.0), self.1.into_iter().map(f).collect())
+    }
 }
 
 impl<T> Into<Vec<T>> for NonEmpty<T> {
