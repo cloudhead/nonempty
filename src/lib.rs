@@ -137,6 +137,59 @@ impl<T> NonEmpty<T> {
             .map(|(h, t)| NonEmpty(h.clone(), t.into()))
     }
 
+    /// Deconstruct a `NonEmpty` into its head and tail.
+    /// This operation never fails since we are guranteed
+    /// to have a head element.
+    ///
+    /// # Example Use
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let mut non_empty = NonEmpty::new(1);
+    /// [2, 3, 4, 5].iter().for_each(|i| non_empty.push(*i));
+    ///
+    /// // Guaranteed to have the head and we also get the tail.
+    /// assert_eq!(non_empty.split_first(), (&1, &[2, 3, 4, 5][..]));
+    ///
+    /// let non_empty = NonEmpty::new(1);
+    ///
+    /// // Guaranteed to have the head element.
+    /// assert_eq!(non_empty.split_first(), (&1, &[][..]));
+    /// ```
+    pub fn split_first(&self) -> (&T, &[T]) {
+        (&self.0, &self.1)
+    }
+
+    /// Deconstruct a `NonEmpty` into its first, last, and
+    /// middle elements, in that order.
+    ///
+    /// If there is only one element then first == last.
+    ///
+    /// # Example Use
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let mut non_empty = NonEmpty::new(1);
+    /// [2, 3, 4, 5].iter().for_each(|i| non_empty.push(*i));
+    ///
+    /// // Guaranteed to have the last element and the elements
+    /// // preceding it.
+    /// assert_eq!(non_empty.split(), (&1, &[2, 3, 4][..], &5));
+    ///
+    /// let non_empty = NonEmpty::new(1);
+    ///
+    /// // Guaranteed to have the last element.
+    /// assert_eq!(non_empty.split(), (&1, &[][..], &1));
+    /// ```
+    pub fn split(&self) -> (&T, &[T], &T) {
+        match self.1.split_last() {
+            None => (&self.0, &[], &self.0),
+            Some((last, middle)) => (&self.0, middle, last),
+        }
+    }
+
     /// Append a `Vec` to the tail of the `NonEmpty`.
     ///
     /// # Example Use
