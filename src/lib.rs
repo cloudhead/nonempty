@@ -229,11 +229,11 @@ impl<T> NonEmpty<T> {
     /// expected.append(&mut vec![4, 9, 16, 25]);
     ///
     /// assert_eq!(squares, expected);
-    pub fn map<U, F>(self, mut f: F) -> NonEmpty<U>
+    pub fn map<U, F>(&self, f: F) -> NonEmpty<U>
     where
-        F: FnMut(T) -> U,
+        F: Fn(&T) -> U,
     {
-        NonEmpty(f(self.0), self.1.into_iter().map(f).collect())
+        NonEmpty(f(&self.0), self.1.iter().map(f).collect())
     }
 }
 
