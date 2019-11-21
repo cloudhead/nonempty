@@ -5,15 +5,16 @@
 //! ```
 //! use nonempty::NonEmpty;
 //!
-//! let mut l = NonEmpty::new(42);
+//! let mut l = NonEmpty::from((42, vec![36, 58]));
 //!
 //! assert_eq!(l.first(), &42);
 //!
-//! l.push(36);
-//! l.push(58);
+//! l.push(9001);
+//!
+//! assert_eq!(l.last(), &9001);
 //!
 //! let v: Vec<i32> = l.into();
-//! assert_eq!(v, vec![42, 36, 58]);
+//! assert_eq!(v, vec![42, 36, 58, 9001]);
 //! ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NonEmpty<T>(T, Vec<T>);
@@ -97,9 +98,7 @@ impl<T> NonEmpty<T> {
     /// ```
     /// use nonempty::NonEmpty;
     ///
-    /// let mut l = NonEmpty::new(42);
-    /// l.push(36);
-    /// l.push(58);
+    /// let mut l = NonEmpty::from((42, vec![36, 58]));
     ///
     /// let mut l_iter = l.iter();
     ///
@@ -123,7 +122,7 @@ impl<T> NonEmpty<T> {
     /// use nonempty::NonEmpty;
     ///
     /// let non_empty_vec = NonEmpty::from_slice(&[1, 2, 3, 4, 5]);
-    /// assert!(non_empty_vec.is_some());
+    /// assert_eq!(non_empty_vec, Some(NonEmpty::from((1, vec![2, 3, 4, 5]))));
     ///
     /// let empty_vec: Option<NonEmpty<&u32>> = NonEmpty::from_slice(&[]);
     /// assert!(empty_vec.is_none());
@@ -146,8 +145,7 @@ impl<T> NonEmpty<T> {
     /// ```
     /// use nonempty::NonEmpty;
     ///
-    /// let mut non_empty = NonEmpty::new(1);
-    /// [2, 3, 4, 5].iter().for_each(|i| non_empty.push(*i));
+    /// let mut non_empty = NonEmpty::from((1, vec![2, 3, 4, 5]));
     ///
     /// // Guaranteed to have the head and we also get the tail.
     /// assert_eq!(non_empty.split_first(), (&1, &[2, 3, 4, 5][..]));
@@ -171,8 +169,7 @@ impl<T> NonEmpty<T> {
     /// ```
     /// use nonempty::NonEmpty;
     ///
-    /// let mut non_empty = NonEmpty::new(1);
-    /// [2, 3, 4, 5].iter().for_each(|i| non_empty.push(*i));
+    /// let mut non_empty = NonEmpty::from((1, vec![2, 3, 4, 5]));
     ///
     /// // Guaranteed to have the last element and the elements
     /// // preceding it.
@@ -201,8 +198,7 @@ impl<T> NonEmpty<T> {
     /// let mut vec = vec![2, 3, 4, 5];
     /// non_empty.append(&mut vec);
     ///
-    /// let mut expected = NonEmpty::new(1);
-    /// [2, 3, 4, 5].iter().for_each(|i| expected.push(*i));
+    /// let mut expected = NonEmpty::from((1, vec![2, 3, 4, 5]));
     ///
     /// assert_eq!(non_empty, expected);
     /// ```
@@ -220,14 +216,11 @@ impl<T> NonEmpty<T> {
     /// ```
     /// use nonempty::NonEmpty;
     ///
-    /// let mut non_empty = NonEmpty::new(1);
-    /// let mut vec = vec![2, 3, 4, 5];
-    /// non_empty.append(&mut vec);
+    /// let non_empty = NonEmpty::from((1, vec![2, 3, 4, 5]));
     ///
     /// let squares = non_empty.map(|i| i * i);
     ///
-    /// let mut expected = NonEmpty::new(1);
-    /// expected.append(&mut vec![4, 9, 16, 25]);
+    /// let expected = NonEmpty::from((1, vec![4, 9, 16, 25]));
     ///
     /// assert_eq!(squares, expected);
     /// ```
