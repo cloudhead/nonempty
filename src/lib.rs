@@ -249,8 +249,8 @@ impl<T> Into<Vec<T>> for NonEmpty<T> {
 impl<T> From<(T, Vec<T>)> for NonEmpty<T> {
     /// Turns a pair of an element and a Vec into
     /// a NonEmpty.
-    fn from(pair: (T, Vec<T>)) -> Self {
-        NonEmpty(pair.0, pair.1)
+    fn from((head, tail): (T, Vec<T>)) -> Self {
+        NonEmpty(head, tail)
     }
 }
 
