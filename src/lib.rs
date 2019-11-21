@@ -243,3 +243,23 @@ impl<T> Into<Vec<T>> for NonEmpty<T> {
         std::iter::once(self.0).chain(self.1).collect()
     }
 }
+
+impl<T> From<(T, Vec<T>)> for NonEmpty<T> {
+    /// Turns a pair of an element and a Vec into
+    /// a NonEmpty.
+    fn from(pair: (T, Vec<T>)) -> Self {
+        NonEmpty(pair.0, pair.1)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::NonEmpty;
+
+    #[test]
+    fn test_from_conversion() {
+        let result = NonEmpty::from((1, vec![2, 3, 4, 5]));
+        let expected = NonEmpty(1, vec![2, 3, 4, 5]);
+        assert_eq!(result, expected);
+    }
+}
