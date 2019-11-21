@@ -15,7 +15,7 @@
 //! let v: Vec<i32> = l.into();
 //! assert_eq!(v, vec![42, 36, 58]);
 //! ```
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NonEmpty<T>(T, Vec<T>);
 
 impl<T> NonEmpty<T> {
@@ -205,6 +205,7 @@ impl<T> NonEmpty<T> {
     /// [2, 3, 4, 5].iter().for_each(|i| expected.push(*i));
     ///
     /// assert_eq!(non_empty, expected);
+    /// ```
     pub fn append(&mut self, other: &mut Vec<T>) {
         self.1.append(other)
     }
@@ -229,6 +230,7 @@ impl<T> NonEmpty<T> {
     /// expected.append(&mut vec![4, 9, 16, 25]);
     ///
     /// assert_eq!(squares, expected);
+    /// ```
     pub fn map<U, F>(&self, f: F) -> NonEmpty<U>
     where
         F: Fn(&T) -> U,
