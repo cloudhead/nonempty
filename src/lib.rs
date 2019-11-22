@@ -111,6 +111,28 @@ impl<T> NonEmpty<T> {
         std::iter::once(&self.0).chain(self.1.iter())
     }
 
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let mut l = NonEmpty::new(42);
+    /// l.push(36);
+    /// l.push(58);
+    ///
+    /// for i in l.iter_mut() {
+    ///     *i *= 10;
+    /// }
+    ///
+    /// let mut l_iter = l.iter();
+    ///
+    /// assert_eq!(l_iter.next(), Some(&420));
+    /// assert_eq!(l_iter.next(), Some(&360));
+    /// assert_eq!(l_iter.next(), Some(&580));
+    /// assert_eq!(l_iter.next(), None);
+    /// ```
+    pub fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &mut T> + 'a {
+        std::iter::once(&mut self.0).chain(self.1.iter_mut())
+    }
+
     /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is `NonEmpty` before
     /// proceeding with a computation. Using `from_slice` will give us a proof
     /// that we have a `NonEmpty` in the `Some` branch, otherwise it allows
