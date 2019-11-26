@@ -40,6 +40,11 @@ impl<T> NonEmpty<T> {
         &self.0
     }
 
+    /// Get the possibly-empty tail of the list.
+    pub fn tail(&self) -> &[T] {
+        &self.1
+    }
+
     /// Push an element to the end of the list.
     pub fn push(&mut self, e: T) {
         self.1.push(e)
