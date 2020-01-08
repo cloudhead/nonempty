@@ -17,6 +17,7 @@
 //! assert_eq!(v, vec![42, 36, 58, 9001]);
 //! ```
 use std::cmp::Ordering;
+use std::mem;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NonEmpty<T>(T, Vec<T>);
@@ -73,24 +74,18 @@ impl<T> NonEmpty<T> {
     /// assert_eq!(non_empty, NonEmpty::from((1, vec![4, 2, 3])));
     /// non_empty.insert(4, 5);
     /// assert_eq!(non_empty, NonEmpty::from((1, vec![4, 2, 3, 5])));
+    /// non_empty.insert(0, 42);
+    /// assert_eq!(non_empty, NonEmpty::from((42, vec![1, 4, 2, 3, 5])));
     /// ```
-    pub fn insert(&mut self, index: usize, element: T)
-    where
-        T: Clone,
-    {
+    pub fn insert(&mut self, index: usize, element: T) {
         let len = self.len();
         assert!(index <= len);
 
         if index == 0 {
-            let head = self.0.clone();
-            let tail = &mut self.1;
-            tail.insert(0, head);
-            self.0 = element;
-            self.1 = tail.clone();
+            let head = mem::replace(&mut self.0, element);
+            self.1.insert(0, head);
         } else {
-            let tail = &mut self.1;
-            tail.insert(index - 1, element);
-            self.1 = tail.clone();
+            self.1.insert(index - 1, element);
         }
     }
 
