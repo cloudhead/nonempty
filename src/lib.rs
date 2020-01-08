@@ -333,14 +333,7 @@ impl<T> NonEmpty<T> {
     where
         T: Ord,
     {
-        if x == &self.0 {
-            Ok(0)
-        } else {
-            self.1
-                .binary_search(x)
-                .map(|index| index + 1)
-                .map_err(|index| index + 1)
-        }
+        self.binary_search_by(|p| p.cmp(x))
     }
 
     /// Binary searches this sorted slice with a comparator function.
