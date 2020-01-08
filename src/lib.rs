@@ -294,6 +294,52 @@ impl<T> NonEmpty<T> {
     {
         NonEmpty(f(&self.0), self.1.iter().map(f).collect())
     }
+
+    /// Binary searches this sorted slice for a given element.
+    ///
+    /// If the value is found then Result::Ok is returned, containing the index of the matching element.
+    /// If there are multiple matches, then any one of the matches could be returned.
+    ///
+    /// If the value is not found then Result::Err is returned, containing the index where a
+    /// matching element could be inserted while maintaining sorted order.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let non_empty = NonEmpty::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]));
+    /// assert_eq!(non_empty.binary_search(&13),  Ok(9));
+    /// assert_eq!(non_empty.binary_search(&4),   Err(7));
+    /// assert_eq!(non_empty.binary_search(&100), Err(13));
+    /// let r = non_empty.binary_search(&1);
+    /// assert!(match r { Ok(1..=4) => true, _ => false, });
+    /// ```
+    ///
+    /// If you want to insert an item to a sorted non-empty vector, while maintaining sort order:
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let mut non_empty = NonEmpty::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]));
+    /// let num = 42;
+    /// let idx = non_empty.binary_search(&num).unwrap_or_else(|x| x);
+    /// non_empty.insert(idx, num);
+    /// assert_eq!(non_empty, NonEmpty::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 42, 55])));
+    /// ```
+    pub fn binary_search(&self, x: &T) -> Result<usize, usize>
+    where
+        T: Ord,
+    {
+        if x == &self.0 {
+            Ok(0)
+        } else {
+            self.1
+                .binary_search(x)
+                .map(|index| index + 1)
+                .map_err(|index| index + 1)
+        }
+    }
 }
 
 impl<T> Into<Vec<T>> for NonEmpty<T> {
