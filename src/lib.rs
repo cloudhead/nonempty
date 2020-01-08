@@ -55,6 +55,43 @@ impl<T> NonEmpty<T> {
         self.1.pop()
     }
 
+    /// Inserts an element at position index within the vector, shifting all elements after it to the right.
+    ///
+    /// # Panics
+    ///
+    /// Panics if index > len.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let mut non_empty = NonEmpty::from((1, vec![2, 3]));
+    /// non_empty.insert(1, 4);
+    /// assert_eq!(non_empty, NonEmpty::from((1, vec![4, 2, 3])));
+    /// non_empty.insert(4, 5);
+    /// assert_eq!(non_empty, NonEmpty::from((1, vec![4, 2, 3, 5])));
+    /// ```
+    pub fn insert(&mut self, index: usize, element: T)
+    where
+        T: Clone,
+    {
+        let len = self.len();
+        assert!(index <= len);
+
+        if index == 0 {
+            let head = self.0.clone();
+            let tail = &mut self.1;
+            tail.insert(0, head);
+            self.0 = element;
+            self.1 = tail.clone();
+        } else {
+            let tail = &mut self.1;
+            tail.insert(index - 1, element);
+            self.1 = tail.clone();
+        }
+    }
+
     /// Get the length of the list.
     pub fn len(&self) -> usize {
         self.1.len() + 1
