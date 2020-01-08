@@ -379,6 +379,46 @@ impl<T> NonEmpty<T> {
                 .map_err(|index| index + 1),
         }
     }
+
+    /// Binary searches this sorted slice with a comparator function.
+    ///
+    /// The comparator function should implement an order consistent with the sort order of the
+    /// underlying slice, returning an order code that indicates whether its argument is Less,
+    /// Equal or Greater the desired target.
+    ///
+    /// If the value is found then Result::Ok is returned, containing the index of the matching
+    /// element. If there are multiple matches, then any one of the matches could be returned. If
+    /// the value is not found then Result::Err is returned, containing the index where a matching
+    /// element could be inserted while maintaining sorted order.
+    ///
+    /// # Examples
+    ///
+    /// Looks up a series of four elements. The first is found, with a uniquely determined
+    /// position; the second and third are not found; the fourth could match any position in [1,
+    /// 4].
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let non_empty = NonEmpty::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]));
+    ///
+    /// let seek = 13;
+    /// assert_eq!(non_empty.binary_search_by(|probe| probe.cmp(&seek)), Ok(9));
+    /// let seek = 4;
+    /// assert_eq!(non_empty.binary_search_by(|probe| probe.cmp(&seek)), Err(7));
+    /// let seek = 100;
+    /// assert_eq!(non_empty.binary_search_by(|probe| probe.cmp(&seek)), Err(13));
+    /// let seek = 1;
+    /// let r = non_empty.binary_search_by(|probe| probe.cmp(&seek));
+    /// assert!(match r { Ok(1..=4) => true, _ => false, });
+    /// ```
+    pub fn binary_search_by_key<'a, B, F>(&'a self, b: &B, mut f: F) -> Result<usize, usize>
+    where
+        B: Ord,
+        F: FnMut(&'a T) -> B,
+    {
+        self.binary_search_by(|k| f(k).cmp(b))
+    }
 }
 
 impl<T> Into<Vec<T>> for NonEmpty<T> {
