@@ -306,6 +306,7 @@ impl<T> NonEmpty<T> {
     /// use nonempty::NonEmpty;
     ///
     /// let non_empty = NonEmpty::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]));
+    /// assert_eq!(non_empty.binary_search(&0),   Ok(0));
     /// assert_eq!(non_empty.binary_search(&13),  Ok(9));
     /// assert_eq!(non_empty.binary_search(&4),   Err(7));
     /// assert_eq!(non_empty.binary_search(&100), Err(13));
@@ -350,6 +351,8 @@ impl<T> NonEmpty<T> {
     /// use nonempty::NonEmpty;
     ///
     /// let non_empty = NonEmpty::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]));
+    /// let seek = 0;
+    /// assert_eq!(non_empty.binary_search_by(|probe| probe.cmp(&seek)), Ok(0));
     /// let seek = 13;
     /// assert_eq!(non_empty.binary_search_by(|probe| probe.cmp(&seek)), Ok(9));
     /// let seek = 4;
@@ -365,8 +368,8 @@ impl<T> NonEmpty<T> {
         F: FnMut(&'a T) -> Ordering,
     {
         match f(&self.0) {
-            Ordering::Equal => Err(0),
-            Ordering::Greater => Ok(0),
+            Ordering::Equal => Ok(0),
+            Ordering::Greater => Err(0),
             Ordering::Less => self
                 .1
                 .binary_search_by(f)
