@@ -292,7 +292,7 @@ impl<T> NonEmpty<T> {
         NonEmpty(f(&self.0), self.1.iter().map(f).collect())
     }
 
-    /// Binary searches this sorted slice for a given element.
+    /// Binary searches this sorted non-empty vector for a given element.
     ///
     /// If the value is found then Result::Ok is returned, containing the index of the matching element.
     /// If there are multiple matches, then any one of the matches could be returned.
@@ -332,7 +332,7 @@ impl<T> NonEmpty<T> {
         self.binary_search_by(|p| p.cmp(x))
     }
 
-    /// Binary searches this sorted slice with a comparator function.
+    /// Binary searches this sorted non-empty with a comparator function.
     ///
     /// The comparator function should implement an order consistent with the sort order of the underlying slice,
     /// returning an order code that indicates whether its argument is Less, Equal or Greater the desired target.
@@ -378,36 +378,35 @@ impl<T> NonEmpty<T> {
         }
     }
 
-    /// Binary searches this sorted slice with a comparator function.
+    /// Binary searches this sorted non-empty vector with a key extraction function.
     ///
-    /// The comparator function should implement an order consistent with the sort order of the
-    /// underlying slice, returning an order code that indicates whether its argument is Less,
-    /// Equal or Greater the desired target.
+    /// Assumes that the vector is sorted by the key.
     ///
-    /// If the value is found then Result::Ok is returned, containing the index of the matching
-    /// element. If there are multiple matches, then any one of the matches could be returned. If
-    /// the value is not found then Result::Err is returned, containing the index where a matching
-    /// element could be inserted while maintaining sorted order.
+    /// If the value is found then Result::Ok is returned, containing the index of the matching element. If there are multiple matches,
+    /// then any one of the matches could be returned. If the value is not found then Result::Err is returned,
+    /// containing the index where a matching element could be inserted while maintaining sorted order.
     ///
     /// # Examples
     ///
-    /// Looks up a series of four elements. The first is found, with a uniquely determined
-    /// position; the second and third are not found; the fourth could match any position in [1,
-    /// 4].
+    /// Looks up a series of four elements in a non-empty vector of pairs sorted by their second elements.
+    /// The first is found, with a uniquely determined position; the second and third are not found;
+    /// the fourth could match any position in [1, 4].
     ///
     /// ```
     /// use nonempty::NonEmpty;
     ///
-    /// let non_empty = NonEmpty::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]));
+    /// let non_empty = NonEmpty::from((
+    ///     (0, 0),
+    ///     vec![(2, 1), (4, 1), (5, 1), (3, 1),
+    ///          (1, 2), (2, 3), (4, 5), (5, 8), (3, 13),
+    ///          (1, 21), (2, 34), (4, 55)]
+    /// ));
     ///
-    /// let seek = 13;
-    /// assert_eq!(non_empty.binary_search_by(|probe| probe.cmp(&seek)), Ok(9));
-    /// let seek = 4;
-    /// assert_eq!(non_empty.binary_search_by(|probe| probe.cmp(&seek)), Err(7));
-    /// let seek = 100;
-    /// assert_eq!(non_empty.binary_search_by(|probe| probe.cmp(&seek)), Err(13));
-    /// let seek = 1;
-    /// let r = non_empty.binary_search_by(|probe| probe.cmp(&seek));
+    /// assert_eq!(non_empty.binary_search_by_key(&0, |&(a,b)| b),  Ok(0));
+    /// assert_eq!(non_empty.binary_search_by_key(&13, |&(a,b)| b),  Ok(9));
+    /// assert_eq!(non_empty.binary_search_by_key(&4, |&(a,b)| b),   Err(7));
+    /// assert_eq!(non_empty.binary_search_by_key(&100, |&(a,b)| b), Err(13));
+    /// let r = non_empty.binary_search_by_key(&1, |&(a,b)| b);
     /// assert!(match r { Ok(1..=4) => true, _ => false, });
     /// ```
     pub fn binary_search_by_key<'a, B, F>(&'a self, b: &B, mut f: F) -> Result<usize, usize>
