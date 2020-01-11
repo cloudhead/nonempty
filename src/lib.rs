@@ -44,6 +44,16 @@ impl<T> NonEmpty<T> {
     }
 
     /// Get the possibly-empty tail of the list.
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let non_empty = NonEmpty::new(42);
+    /// assert_eq!(non_empty.tail(), &[]);
+    ///
+    /// let non_empty = NonEmpty::from((1, vec![4, 2, 3]));
+    /// assert_eq!(non_empty.tail(), &[4, 2, 3]);
+    /// ```
     pub fn tail(&self) -> &[T] {
         &self.1
     }
@@ -415,6 +425,146 @@ impl<T> NonEmpty<T> {
         F: FnMut(&'a T) -> B,
     {
         self.binary_search_by(|k| f(k).cmp(b))
+    }
+
+    /// Returns the maximum element in the non-empty vector.
+    ///
+    /// This will return the first item in the vector if the tail is empty.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let non_empty = NonEmpty::new(42);
+    /// assert_eq!(non_empty.maximum(), &42);
+    ///
+    /// let non_empty = NonEmpty::from((1, vec![-34, 42, 76, 4, 5]));
+    /// assert_eq!(non_empty.maximum(), &76);
+    /// ```
+    pub fn maximum(&self) -> &T
+    where
+        T: Ord,
+    {
+        self.maximum_by(|i, j| i.cmp(j))
+    }
+
+    /// Returns the minimum element in the non-empty vector.
+    ///
+    /// This will return the first item in the vector if the tail is empty.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let non_empty = NonEmpty::new(42);
+    /// assert_eq!(non_empty.minimum(), &42);
+    ///
+    /// let non_empty = NonEmpty::from((1, vec![-34, 42, 76, 4, 5]));
+    /// assert_eq!(non_empty.minimum(), &-34);
+    /// ```
+    pub fn minimum(&self) -> &T
+    where
+        T: Ord,
+    {
+        self.minimum_by(|i, j| i.cmp(j))
+    }
+
+    /// Returns the element that gives the maximum value with respect to the specified comparison function.
+    ///
+    /// This will return the first item in the vector if the tail is empty.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let non_empty = NonEmpty::new((0, 42));
+    /// assert_eq!(non_empty.maximum_by(|(k, _), (l, _)| k.cmp(l)), &(0, 42));
+    ///
+    /// let non_empty = NonEmpty::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
+    /// assert_eq!(non_empty.maximum_by(|(k, _), (l, _)| k.cmp(l)), &(4, 42));
+    /// ```
+    pub fn maximum_by<F>(&self, compare: F) -> &T
+    where
+        F: Fn(&T, &T) -> Ordering,
+    {
+        let mut max = &self.0;
+        for i in self.1.iter() {
+            max = match compare(&max, &i) {
+                Ordering::Equal => max,
+                Ordering::Less => &i,
+                Ordering::Greater => max,
+            };
+        }
+        max
+    }
+
+    /// Returns the element that gives the minimum value with respect to the specified comparison function.
+    ///
+    /// This will return the first item in the vector if the tail is empty.
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let non_empty = NonEmpty::new((0, 42));
+    /// assert_eq!(non_empty.minimum_by(|(k, _), (l, _)| k.cmp(l)), &(0, 42));
+    ///
+    /// let non_empty = NonEmpty::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
+    /// assert_eq!(non_empty.minimum_by(|(k, _), (l, _)| k.cmp(l)), &(0, 76));
+    /// ```
+    pub fn minimum_by<F>(&self, compare: F) -> &T
+    where
+        F: Fn(&T, &T) -> Ordering,
+    {
+        self.maximum_by(|a, b| compare(a, b).reverse())
+    }
+
+    /// Returns the element that gives the maximum value with respect to the specified function.
+    ///
+    /// This will return the first item in the vector if the tail is empty.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let non_empty = NonEmpty::new((0, 42));
+    /// assert_eq!(non_empty.maximum_by_key(|(k, _)| k), &(0, 42));
+    ///
+    /// let non_empty = NonEmpty::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
+    /// assert_eq!(non_empty.maximum_by_key(|(k, _)| k), &(4, 42));
+    /// ```
+    pub fn maximum_by_key<U, F>(&self, f: F) -> &T
+    where
+        U: Ord,
+        F: Fn(&T) -> &U,
+    {
+        self.maximum_by(|i, j| f(i).cmp(f(j)))
+    }
+
+    /// Returns the element that gives the minimum value with respect to the specified function.
+    ///
+    /// This will return the first item in the vector if the tail is empty.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let non_empty = NonEmpty::new((0, 42));
+    /// assert_eq!(non_empty.minimum_by_key(|(k, _)| k), &(0, 42));
+    ///
+    /// let non_empty = NonEmpty::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
+    /// assert_eq!(non_empty.minimum_by_key(|(k, _)| k), &(0, 76));
+    /// ```
+    pub fn minimum_by_key<U, F>(&self, f: F) -> &T
+    where
+        U: Ord,
+        F: Fn(&T) -> &U,
+    {
+        self.minimum_by(|i, j| f(i).cmp(f(j)))
     }
 }
 
