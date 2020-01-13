@@ -120,6 +120,23 @@ impl<T> NonEmpty<T> {
         }
     }
 
+    /// Check whether an element is contained in the list.
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let mut l = NonEmpty::from((42, vec![36, 58]));
+    ///
+    /// assert!(l.contains(&42));
+    /// assert!(!l.contains(&101));
+    /// ```
+    pub fn contains(&self, x: &T) -> bool
+    where
+        T: PartialEq,
+    {
+        self.iter().any(|e| e == x)
+    }
+
     /// Get an element by index.
     pub fn get(&self, index: usize) -> Option<&T> {
         if index == 0 {
