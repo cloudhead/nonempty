@@ -43,6 +43,27 @@ impl<T> NonEmpty<T> {
         &self.0
     }
 
+    /// Get the mutable reference to the first element. Never fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let mut non_empty = NonEmpty::new(42);
+    /// let head = non_empty.first_mut();
+    /// *head += 1;
+    /// assert_eq!(non_empty.first(), &43);
+    ///
+    /// let mut non_empty = NonEmpty::from((1, vec![4, 2, 3]));
+    /// let head = non_empty.first_mut();
+    /// *head *= 42;
+    /// assert_eq!(non_empty.first(), &42);
+    /// ```
+    pub fn first_mut(&mut self) -> &mut T {
+        &mut self.0
+    }
+
     /// Get the possibly-empty tail of the list.
     ///
     /// ```
