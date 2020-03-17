@@ -18,6 +18,7 @@
 //! ```
 use std::cmp::Ordering;
 use std::mem;
+use std::{iter, vec};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NonEmpty<T>(T, Vec<T>);
@@ -195,7 +196,7 @@ impl<T> NonEmpty<T> {
     /// assert_eq!(l_iter.next(), None);
     /// ```
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = &T> + 'a {
-        std::iter::once(&self.0).chain(self.1.iter())
+        iter::once(&self.0).chain(self.1.iter())
     }
 
     /// ```
@@ -217,7 +218,7 @@ impl<T> NonEmpty<T> {
     /// assert_eq!(l_iter.next(), None);
     /// ```
     pub fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &mut T> + 'a {
-        std::iter::once(&mut self.0).chain(self.1.iter_mut())
+        iter::once(&mut self.0).chain(self.1.iter_mut())
     }
 
     /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is `NonEmpty` before
@@ -609,7 +610,7 @@ impl<T> NonEmpty<T> {
 impl<T> Into<Vec<T>> for NonEmpty<T> {
     /// Turns a non-empty list into a Vec.
     fn into(self) -> Vec<T> {
-        std::iter::once(self.0).chain(self.1).collect()
+        iter::once(self.0).chain(self.1).collect()
     }
 }
 
@@ -623,10 +624,10 @@ impl<T> From<(T, Vec<T>)> for NonEmpty<T> {
 
 impl<T> IntoIterator for NonEmpty<T> {
     type Item = T;
-    type IntoIter = std::iter::Chain<std::iter::Once<T>, std::vec::IntoIter<Self::Item>>;
+    type IntoIter = iter::Chain<iter::Once<T>, vec::IntoIter<Self::Item>>;
 
     fn into_iter(self) -> Self::IntoIter {
-        std::iter::once(self.0).chain(self.1)
+        iter::once(self.0).chain(self.1)
     }
 }
 
