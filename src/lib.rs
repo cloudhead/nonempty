@@ -621,6 +621,15 @@ impl<T> From<(T, Vec<T>)> for NonEmpty<T> {
     }
 }
 
+impl<T> IntoIterator for NonEmpty<T> {
+    type Item = T;
+    type IntoIter = std::iter::Chain<std::iter::Once<T>, std::vec::IntoIter<Self::Item>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        std::iter::once(self.0).chain(self.1)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::NonEmpty;
@@ -630,5 +639,13 @@ mod tests {
         let result = NonEmpty::from((1, vec![2, 3, 4, 5]));
         let expected = NonEmpty(1, vec![2, 3, 4, 5]);
         assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_into_iter() {
+        let nonempty = NonEmpty::from((0, vec![1, 2, 3]));
+        for (i, n) in nonempty.into_iter().enumerate() {
+            assert_eq!(i as i32, n);
+        }
     }
 }
