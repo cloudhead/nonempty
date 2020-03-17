@@ -614,6 +614,13 @@ impl<T> Into<Vec<T>> for NonEmpty<T> {
     }
 }
 
+impl<T> Into<(T, Vec<T>)> for NonEmpty<T> {
+    /// Turns a non-empty list into a Vec.
+    fn into(self) -> (T, Vec<T>) {
+        (self.0, self.1)
+    }
+}
+
 impl<T> From<(T, Vec<T>)> for NonEmpty<T> {
     /// Turns a pair of an element and a Vec into
     /// a NonEmpty.
