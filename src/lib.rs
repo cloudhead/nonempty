@@ -389,7 +389,7 @@ impl<T> NonEmpty<T> {
     /// If the value is found then Result::Ok is returned, containing the index of the matching element.
     /// If there are multiple matches, then any one of the matches could be returned.
     /// If the value is not found then Result::Err is returned, containing the index where a matching element could be
-    ///	inserted while maintaining sorted order.
+    /// inserted while maintaining sorted order.
     ///
     /// # Examples
     ///
@@ -607,17 +607,17 @@ impl<T> NonEmpty<T> {
     }
 }
 
-impl<T> Into<Vec<T>> for NonEmpty<T> {
+impl<T> From<NonEmpty<T>> for Vec<T> {
     /// Turns a non-empty list into a Vec.
-    fn into(self) -> Vec<T> {
-        iter::once(self.0).chain(self.1).collect()
+    fn from(nonempty: NonEmpty<T>) -> Vec<T> {
+        iter::once(nonempty.0).chain(nonempty.1).collect()
     }
 }
 
-impl<T> Into<(T, Vec<T>)> for NonEmpty<T> {
+impl<T> From<NonEmpty<T>> for (T, Vec<T>) {
     /// Turns a non-empty list into a Vec.
-    fn into(self) -> (T, Vec<T>) {
-        (self.0, self.1)
+    fn from(nonempty: NonEmpty<T>) -> (T, Vec<T>) {
+        (nonempty.0, nonempty.1)
     }
 }
 
