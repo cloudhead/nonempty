@@ -334,11 +334,11 @@ impl<T> NonEmpty<T> {
     ///
     /// assert_eq!(squares, expected);
     /// ```
-    pub fn map<U, F>(&self, f: F) -> NonEmpty<U>
+    pub fn map<U, F>(self, mut f: F) -> NonEmpty<U>
     where
-        F: Fn(&T) -> U,
+        F: FnMut(T) -> U,
     {
-        NonEmpty(f(&self.0), self.1.iter().map(f).collect())
+        NonEmpty(f(self.0), self.1.into_iter().map(f).collect())
     }
 
     /// Binary searches this sorted non-empty vector for a given element.
