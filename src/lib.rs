@@ -246,6 +246,34 @@ impl<T> NonEmpty<T> {
             .map(|(h, t)| NonEmpty(h.clone(), t.into()))
     }
 
+    /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is `NonEmpty` before
+    /// proceeding with a computation. Using `from_vec` will give us a proof
+    /// that we have a `NonEmpty` in the `Some` branch, otherwise it allows
+    /// the caller to handle the `None` case.
+    ///
+    /// This version will consume the `Vec` you pass in. If you would rather pass the data as a
+    /// slice then use `NonEmpty::from_slice`.
+    ///
+    /// # Example Use
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let non_empty_vec = NonEmpty::from_vec(vec![1, 2, 3, 4, 5]);
+    /// assert_eq!(non_empty_vec, Some(NonEmpty::from((1, vec![2, 3, 4, 5]))));
+    ///
+    /// let empty_vec: Option<NonEmpty<&u32>> = NonEmpty::from_vec(vec![]);
+    /// assert!(empty_vec.is_none());
+    /// ```
+    pub fn from_vec(mut vec: Vec<T>) -> Option<NonEmpty<T>> {
+        if vec.is_empty() {
+            None
+        } else {
+            let head = vec.remove(0);
+            Some(NonEmpty(head, vec))
+        }
+    }
+
     /// Deconstruct a `NonEmpty` into its head and tail.
     /// This operation never fails since we are guranteed
     /// to have a head element.
@@ -334,11 +362,11 @@ impl<T> NonEmpty<T> {
     ///
     /// assert_eq!(squares, expected);
     /// ```
-    pub fn map<U, F>(&self, f: F) -> NonEmpty<U>
+    pub fn map<U, F>(self, mut f: F) -> NonEmpty<U>
     where
-        F: Fn(&T) -> U,
+        F: FnMut(T) -> U,
     {
-        NonEmpty(f(&self.0), self.1.iter().map(f).collect())
+        NonEmpty(f(self.0), self.1.into_iter().map(f).collect())
     }
 
     /// Binary searches this sorted non-empty vector for a given element.
@@ -389,7 +417,7 @@ impl<T> NonEmpty<T> {
     /// If the value is found then Result::Ok is returned, containing the index of the matching element.
     /// If there are multiple matches, then any one of the matches could be returned.
     /// If the value is not found then Result::Err is returned, containing the index where a matching element could be
-    ///	inserted while maintaining sorted order.
+    /// inserted while maintaining sorted order.
     ///
     /// # Examples
     ///
@@ -607,10 +635,17 @@ impl<T> NonEmpty<T> {
     }
 }
 
-impl<T> Into<Vec<T>> for NonEmpty<T> {
+impl<T> From<NonEmpty<T>> for Vec<T> {
     /// Turns a non-empty list into a Vec.
-    fn into(self) -> Vec<T> {
-        iter::once(self.0).chain(self.1).collect()
+    fn from(nonempty: NonEmpty<T>) -> Vec<T> {
+        iter::once(nonempty.0).chain(nonempty.1).collect()
+    }
+}
+
+impl<T> From<NonEmpty<T>> for (T, Vec<T>) {
+    /// Turns a non-empty list into a Vec.
+    fn from(nonempty: NonEmpty<T>) -> (T, Vec<T>) {
+        (nonempty.0, nonempty.1)
     }
 }
 
