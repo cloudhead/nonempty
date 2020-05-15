@@ -369,6 +369,57 @@ impl<T> NonEmpty<T> {
         NonEmpty(f(self.0), self.1.into_iter().map(f).collect())
     }
 
+    /// When we have a function that goes from some `T` to a `NonEmpty<U>`,
+    /// we may want to apply it to a `NonEmpty<T>` but keep the structure flat.
+    /// This is where `flat_map` shines.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let non_empty = NonEmpty::from((1, vec![2, 3, 4, 5]));
+    ///
+    /// let windows = non_empty.flat_map(|i| {
+    ///     let mut next = NonEmpty::new(i + 5);
+    ///     next.push(i + 6);
+    ///     next
+    /// });
+    ///
+    /// let expected = NonEmpty::from((6, vec![7, 7, 8, 8, 9, 9, 10, 10, 11]));
+    ///
+    /// assert_eq!(windows, expected);
+    /// ```
+    pub fn flat_map<U, F>(self, mut f: F) -> NonEmpty<U>
+    where
+        F: FnMut(T) -> NonEmpty<U>,
+    {
+        let mut heads = f(self.0);
+        let mut tails = self.1.into_iter().flat_map(|t| f(t).into_iter()).collect();
+        heads.append(&mut tails);
+        heads
+    }
+
+    /// Flatten nested `NonEmpty`s into a single one.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let non_empty = NonEmpty::from((
+    ///     NonEmpty::from((1, vec![2, 3])),
+    ///     vec![NonEmpty::from((4, vec![5]))],
+    /// ));
+    ///
+    /// let expected = NonEmpty::from((1, vec![2, 3, 4, 5]));
+    ///
+    /// assert_eq!(NonEmpty::flatten(non_empty), expected);
+    /// ```
+    pub fn flatten(full: NonEmpty<NonEmpty<T>>) -> Self {
+        full.flat_map(|n| n)
+    }
+
     /// Binary searches this sorted non-empty vector for a given element.
     ///
     /// If the value is found then Result::Ok is returned, containing the index of the matching element.
