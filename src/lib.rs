@@ -5,9 +5,9 @@
 //! ```
 //! use nonempty::NonEmpty;
 //!
-//! let mut l = NonEmpty::from((42, vec![36, 58]));
+//! let mut l = NonEmpty { head: 42, tail: vec![36, 58] };
 //!
-//! assert_eq!(l.first(), &42);
+//! assert_eq!(l.head, 42);
 //!
 //! l.push(9001);
 //!
@@ -21,7 +21,10 @@ use std::mem;
 use std::{iter, vec};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct NonEmpty<T>(T, Vec<T>);
+pub struct NonEmpty<T> {
+    pub head: T,
+    pub tail: Vec<T>,
+}
 
 impl<T> NonEmpty<T> {
     /// Alias for [`NonEmpty::singleton`].
@@ -30,8 +33,11 @@ impl<T> NonEmpty<T> {
     }
 
     /// Create a new non-empty list with an initial element.
-    pub const fn singleton(e: T) -> Self {
-        NonEmpty(e, Vec::new())
+    pub const fn singleton(head: T) -> Self {
+        NonEmpty {
+            head,
+            tail: Vec::new(),
+        }
     }
 
     /// Always returns false.
@@ -41,7 +47,7 @@ impl<T> NonEmpty<T> {
 
     /// Get the first element. Never fails.
     pub const fn first(&self) -> &T {
-        &self.0
+        &self.head
     }
 
     /// Get the mutable reference to the first element. Never fails.
@@ -62,7 +68,7 @@ impl<T> NonEmpty<T> {
     /// assert_eq!(non_empty.first(), &42);
     /// ```
     pub fn first_mut(&mut self) -> &mut T {
-        &mut self.0
+        &mut self.head
     }
 
     /// Get the possibly-empty tail of the list.
@@ -77,17 +83,17 @@ impl<T> NonEmpty<T> {
     /// assert_eq!(non_empty.tail(), &[4, 2, 3]);
     /// ```
     pub fn tail(&self) -> &[T] {
-        &self.1
+        &self.tail
     }
 
     /// Push an element to the end of the list.
     pub fn push(&mut self, e: T) {
-        self.1.push(e)
+        self.tail.push(e)
     }
 
     /// Pop an element from the end of the list.
     pub fn pop(&mut self) -> Option<T> {
-        self.1.pop()
+        self.tail.pop()
     }
 
     /// Inserts an element at position index within the vector, shifting all elements after it to the right.
@@ -114,30 +120,30 @@ impl<T> NonEmpty<T> {
         assert!(index <= len);
 
         if index == 0 {
-            let head = mem::replace(&mut self.0, element);
-            self.1.insert(0, head);
+            let head = mem::replace(&mut self.head, element);
+            self.tail.insert(0, head);
         } else {
-            self.1.insert(index - 1, element);
+            self.tail.insert(index - 1, element);
         }
     }
 
     /// Get the length of the list.
     pub fn len(&self) -> usize {
-        self.1.len() + 1
+        self.tail.len() + 1
     }
 
     /// Get the last element. Never fails.
     pub fn last(&self) -> &T {
-        match self.1.last() {
-            None => &self.0,
+        match self.tail.last() {
+            None => &self.head,
             Some(e) => e,
         }
     }
 
     /// Get the last element mutably.
     pub fn last_mut(&mut self) -> &mut T {
-        match self.1.last_mut() {
-            None => &mut self.0,
+        match self.tail.last_mut() {
+            None => &mut self.head,
             Some(e) => e,
         }
     }
@@ -162,25 +168,25 @@ impl<T> NonEmpty<T> {
     /// Get an element by index.
     pub fn get(&self, index: usize) -> Option<&T> {
         if index == 0 {
-            Some(&self.0)
+            Some(&self.head)
         } else {
-            self.1.get(index - 1)
+            self.tail.get(index - 1)
         }
     }
 
     /// Get an element by index, mutably.
     pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
         if index == 0 {
-            Some(&mut self.0)
+            Some(&mut self.head)
         } else {
-            self.1.get_mut(index - 1)
+            self.tail.get_mut(index - 1)
         }
     }
 
     /// Truncate the list to a certain size. Must be greater than `0`.
     pub fn truncate(&mut self, len: usize) {
         assert!(len >= 1);
-        self.1.truncate(len - 1);
+        self.tail.truncate(len - 1);
     }
 
     /// ```
@@ -196,7 +202,7 @@ impl<T> NonEmpty<T> {
     /// assert_eq!(l_iter.next(), None);
     /// ```
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = &T> + 'a {
-        iter::once(&self.0).chain(self.1.iter())
+        iter::once(&self.head).chain(self.tail.iter())
     }
 
     /// ```
@@ -218,7 +224,7 @@ impl<T> NonEmpty<T> {
     /// assert_eq!(l_iter.next(), None);
     /// ```
     pub fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &mut T> + 'a {
-        iter::once(&mut self.0).chain(self.1.iter_mut())
+        iter::once(&mut self.head).chain(self.tail.iter_mut())
     }
 
     /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is `NonEmpty` before
@@ -241,9 +247,10 @@ impl<T> NonEmpty<T> {
     where
         T: Clone,
     {
-        slice
-            .split_first()
-            .map(|(h, t)| NonEmpty(h.clone(), t.into()))
+        slice.split_first().map(|(h, t)| NonEmpty {
+            head: h.clone(),
+            tail: t.into(),
+        })
     }
 
     /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is `NonEmpty` before
@@ -270,7 +277,7 @@ impl<T> NonEmpty<T> {
             None
         } else {
             let head = vec.remove(0);
-            Some(NonEmpty(head, vec))
+            Some(NonEmpty { head, tail: vec })
         }
     }
 
@@ -294,7 +301,7 @@ impl<T> NonEmpty<T> {
     /// assert_eq!(non_empty.split_first(), (&1, &[][..]));
     /// ```
     pub fn split_first(&self) -> (&T, &[T]) {
-        (&self.0, &self.1)
+        (&self.head, &self.tail)
     }
 
     /// Deconstruct a `NonEmpty` into its first, last, and
@@ -319,9 +326,9 @@ impl<T> NonEmpty<T> {
     /// assert_eq!(non_empty.split(), (&1, &[][..], &1));
     /// ```
     pub fn split(&self) -> (&T, &[T], &T) {
-        match self.1.split_last() {
-            None => (&self.0, &[], &self.0),
-            Some((last, middle)) => (&self.0, middle, last),
+        match self.tail.split_last() {
+            None => (&self.head, &[], &self.head),
+            Some((last, middle)) => (&self.head, middle, last),
         }
     }
 
@@ -341,7 +348,7 @@ impl<T> NonEmpty<T> {
     /// assert_eq!(non_empty, expected);
     /// ```
     pub fn append(&mut self, other: &mut Vec<T>) {
-        self.1.append(other)
+        self.tail.append(other)
     }
 
     /// A structure preserving `map`. This is useful for when
@@ -349,7 +356,7 @@ impl<T> NonEmpty<T> {
     /// that there is at least one element. Otherwise, we can
     /// use `nonempty.iter().map(f)`.
     ///
-    /// # Example Use
+    /// # Examples
     ///
     /// ```
     /// use nonempty::NonEmpty;
@@ -366,7 +373,10 @@ impl<T> NonEmpty<T> {
     where
         F: FnMut(T) -> U,
     {
-        NonEmpty(f(self.0), self.1.into_iter().map(f).collect())
+        NonEmpty {
+            head: f(self.head),
+            tail: self.tail.into_iter().map(f).collect(),
+        }
     }
 
     /// When we have a function that goes from some `T` to a `NonEmpty<U>`,
@@ -394,8 +404,12 @@ impl<T> NonEmpty<T> {
     where
         F: FnMut(T) -> NonEmpty<U>,
     {
-        let mut heads = f(self.0);
-        let mut tails = self.1.into_iter().flat_map(|t| f(t).into_iter()).collect();
+        let mut heads = f(self.head);
+        let mut tails = self
+            .tail
+            .into_iter()
+            .flat_map(|t| f(t).into_iter())
+            .collect();
         heads.append(&mut tails);
         heads
     }
@@ -495,11 +509,11 @@ impl<T> NonEmpty<T> {
     where
         F: FnMut(&'a T) -> Ordering,
     {
-        match f(&self.0) {
+        match f(&self.head) {
             Ordering::Equal => Ok(0),
             Ordering::Greater => Err(0),
             Ordering::Less => self
-                .1
+                .tail
                 .binary_search_by(f)
                 .map(|index| index + 1)
                 .map_err(|index| index + 1),
@@ -608,8 +622,8 @@ impl<T> NonEmpty<T> {
     where
         F: Fn(&T, &T) -> Ordering,
     {
-        let mut max = &self.0;
-        for i in self.1.iter() {
+        let mut max = &self.head;
+        for i in self.tail.iter() {
             max = match compare(&max, &i) {
                 Ordering::Equal => max,
                 Ordering::Less => &i,
@@ -689,14 +703,14 @@ impl<T> NonEmpty<T> {
 impl<T> From<NonEmpty<T>> for Vec<T> {
     /// Turns a non-empty list into a Vec.
     fn from(nonempty: NonEmpty<T>) -> Vec<T> {
-        iter::once(nonempty.0).chain(nonempty.1).collect()
+        iter::once(nonempty.head).chain(nonempty.tail).collect()
     }
 }
 
 impl<T> From<NonEmpty<T>> for (T, Vec<T>) {
     /// Turns a non-empty list into a Vec.
     fn from(nonempty: NonEmpty<T>) -> (T, Vec<T>) {
-        (nonempty.0, nonempty.1)
+        (nonempty.head, nonempty.tail)
     }
 }
 
@@ -704,7 +718,7 @@ impl<T> From<(T, Vec<T>)> for NonEmpty<T> {
     /// Turns a pair of an element and a Vec into
     /// a NonEmpty.
     fn from((head, tail): (T, Vec<T>)) -> Self {
-        NonEmpty(head, tail)
+        NonEmpty { head, tail }
     }
 }
 
@@ -713,7 +727,7 @@ impl<T> IntoIterator for NonEmpty<T> {
     type IntoIter = iter::Chain<iter::Once<T>, vec::IntoIter<Self::Item>>;
 
     fn into_iter(self) -> Self::IntoIter {
-        iter::once(self.0).chain(self.1)
+        iter::once(self.head).chain(self.tail)
     }
 }
 
@@ -724,7 +738,10 @@ mod tests {
     #[test]
     fn test_from_conversion() {
         let result = NonEmpty::from((1, vec![2, 3, 4, 5]));
-        let expected = NonEmpty(1, vec![2, 3, 4, 5]);
+        let expected = NonEmpty {
+            head: 1,
+            tail: vec![2, 3, 4, 5],
+        };
         assert_eq!(result, expected);
     }
 
@@ -734,5 +751,16 @@ mod tests {
         for (i, n) in nonempty.into_iter().enumerate() {
             assert_eq!(i as i32, n);
         }
+    }
+
+    #[test]
+    fn test_mutate_head() {
+        let mut non_empty = NonEmpty::new(42);
+        non_empty.head += 1;
+        assert_eq!(non_empty.head, 43);
+
+        let mut non_empty = NonEmpty::from((1, vec![4, 2, 3]));
+        non_empty.head *= 42;
+        assert_eq!(non_empty.head, 42);
     }
 }
