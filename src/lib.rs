@@ -16,10 +16,13 @@
 //! let v: Vec<i32> = l.into();
 //! assert_eq!(v, vec![42, 36, 58, 9001]);
 //! ```
+#[cfg(feature = "serialize")]
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::mem;
 use std::{iter, vec};
 
+#[cfg_attr(feature = "serialize", derive(Deserialize, Serialize))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NonEmpty<T> {
     pub head: T,
@@ -733,7 +736,17 @@ impl<T> IntoIterator for NonEmpty<T> {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(feature = "serialize")]
+    mod test_structs {
+        use serde::{Deserialize, Serialize};
+
+        #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+        pub struct SimpleSerializable(pub i32);
+    }
+
     use crate::NonEmpty;
+    #[cfg(feature = "serialize")]
+    use test_structs::SimpleSerializable;
 
     #[test]
     fn test_from_conversion() {
@@ -762,5 +775,30 @@ mod tests {
         let mut non_empty = NonEmpty::from((1, vec![4, 2, 3]));
         non_empty.head *= 42;
         assert_eq!(non_empty.head, 42);
+    }
+
+    #[cfg(feature = "serialize")]
+    #[test]
+    fn test_simple_serializable() {
+        // Given
+        let non_empty = NonEmpty::new(SimpleSerializable(42));
+
+        // When
+        let res = serde_json::to_string(&non_empty);
+
+        // Then
+        assert_eq!(res.ok(), Some("{\"head\":42,\"tail\":[]}".into()));
+    }
+
+    #[cfg(feature = "serialize")]
+    #[test]
+    fn test_simple_deserializable() {
+        // Given
+        let json = "{\"head\":42,\"tail\":[]}";
+
+        // When
+        let res = serde_json::from_str::<'_, NonEmpty<SimpleSerializable>>(json);
+        // Then
+        assert_eq!(res.ok(), Some(NonEmpty::new(SimpleSerializable(42))));
     }
 }
