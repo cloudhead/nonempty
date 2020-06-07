@@ -16,10 +16,13 @@
 //! let v: Vec<i32> = l.into();
 //! assert_eq!(v, vec![42, 36, 58, 9001]);
 //! ```
+#[cfg(feature = "serialize")]
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::mem;
 use std::{iter, vec};
 
+#[cfg_attr(feature = "serialize", derive(Deserialize, Serialize))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NonEmpty<T> {
     pub head: T,
@@ -762,5 +765,31 @@ mod tests {
         let mut non_empty = NonEmpty::from((1, vec![4, 2, 3]));
         non_empty.head *= 42;
         assert_eq!(non_empty.head, 42);
+    }
+
+    #[cfg(feature = "serialize")]
+    mod serialize {
+        use crate::NonEmpty;
+        use serde::{Deserialize, Serialize};
+
+        #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+        pub struct SimpleSerializable(pub i32);
+
+        #[test]
+        fn test_simple_round_trip() -> Result<(), Box<dyn std::error::Error>> {
+            // Given
+            let non_empty = NonEmpty::new(SimpleSerializable(42));
+            let expected_value = non_empty.clone();
+
+            // When
+            let res = serde_json::from_str::<'_, NonEmpty<SimpleSerializable>>(
+                &serde_json::to_string(&non_empty)?,
+            )?;
+
+            // Then
+            assert_eq!(res, expected_value);
+
+            Ok(())
+        }
     }
 }
