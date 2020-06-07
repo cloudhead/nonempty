@@ -736,17 +736,7 @@ impl<T> IntoIterator for NonEmpty<T> {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(feature = "serialize")]
-    mod test_structs {
-        use serde::{Deserialize, Serialize};
-
-        #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
-        pub struct SimpleSerializable(pub i32);
-    }
-
     use crate::NonEmpty;
-    #[cfg(feature = "serialize")]
-    use test_structs::SimpleSerializable;
 
     #[test]
     fn test_from_conversion() {
@@ -778,27 +768,28 @@ mod tests {
     }
 
     #[cfg(feature = "serialize")]
-    #[test]
-    fn test_simple_serializable() {
-        // Given
-        let non_empty = NonEmpty::new(SimpleSerializable(42));
+    mod serialize {
+        use crate::NonEmpty;
+        use serde::{Deserialize, Serialize};
 
-        // When
-        let res = serde_json::to_string(&non_empty);
+        #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+        pub struct SimpleSerializable(pub i32);
 
-        // Then
-        assert_eq!(res.ok(), Some("{\"head\":42,\"tail\":[]}".into()));
-    }
+        #[test]
+        fn test_simple_round_trip() -> Result<(), Box<dyn std::error::Error>> {
+            // Given
+            let non_empty = NonEmpty::new(SimpleSerializable(42));
+            let expected_value = non_empty.clone();
 
-    #[cfg(feature = "serialize")]
-    #[test]
-    fn test_simple_deserializable() {
-        // Given
-        let json = "{\"head\":42,\"tail\":[]}";
+            // When
+            let res = serde_json::from_str::<'_, NonEmpty<SimpleSerializable>>(
+                &serde_json::to_string(&non_empty)?,
+            )?;
 
-        // When
-        let res = serde_json::from_str::<'_, NonEmpty<SimpleSerializable>>(json);
-        // Then
-        assert_eq!(res.ok(), Some(NonEmpty::new(SimpleSerializable(42))));
+            // Then
+            assert_eq!(res, expected_value);
+
+            Ok(())
+        }
     }
 }
