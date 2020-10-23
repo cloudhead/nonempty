@@ -5,4 +5,4 @@ jobs:
   fast_finish: true
 cache: cargo
 script:
-  - cargo test
+  - cargo test --features serialize

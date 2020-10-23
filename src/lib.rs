@@ -23,6 +23,11 @@ use std::mem;
 use std::{iter, vec};
 
 #[cfg_attr(feature = "serialize", derive(Deserialize, Serialize))]
+#[cfg_attr(
+    feature = "serialize",
+    serde(bound(serialize = "T: Clone + Serialize")),
+    serde(into = "Vec<T>", try_from = "Vec<T>")
+)]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NonEmpty<T> {
     pub head: T,
@@ -734,6 +739,36 @@ impl<T> IntoIterator for NonEmpty<T> {
     }
 }
 
+#[cfg(feature = "serialize")]
+pub mod serialize {
+    use std::{convert::TryFrom, fmt};
+
+    use super::NonEmpty;
+
+    #[derive(Debug)]
+    pub enum Error {
+        Empty,
+    }
+
+    impl fmt::Display for Error {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            match self {
+                Self::Empty => f.write_str(
+                    "the vector provided was empty, NonEmpty needs at least one element",
+                ),
+            }
+        }
+    }
+
+    impl<T> TryFrom<Vec<T>> for NonEmpty<T> {
+        type Error = Error;
+
+        fn try_from(vec: Vec<T>) -> Result<Self, Self::Error> {
+            NonEmpty::from_vec(vec).ok_or(Error::Empty)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::NonEmpty;
@@ -778,7 +813,8 @@ mod tests {
         #[test]
         fn test_simple_round_trip() -> Result<(), Box<dyn std::error::Error>> {
             // Given
-            let non_empty = NonEmpty::new(SimpleSerializable(42));
+            let mut non_empty = NonEmpty::new(SimpleSerializable(42));
+            non_empty.push(SimpleSerializable(777));
             let expected_value = non_empty.clone();
 
             // When
