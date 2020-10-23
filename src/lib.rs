@@ -747,13 +747,13 @@ pub mod serialize {
 
     #[derive(Debug)]
     pub enum Error {
-        EmptyVec,
+        Empty,
     }
 
     impl fmt::Display for Error {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             match self {
-                Self::EmptyVec => f.write_str(
+                Self::Empty => f.write_str(
                     "the vector provided was empty, NonEmpty needs at least one element",
                 ),
             }
@@ -764,7 +764,7 @@ pub mod serialize {
         type Error = Error;
 
         fn try_from(vec: Vec<T>) -> Result<Self, Self::Error> {
-            NonEmpty::from_vec(vec).ok_or(Error::EmptyVec)
+            NonEmpty::from_vec(vec).ok_or(Error::Empty)
         }
     }
 }
