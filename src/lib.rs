@@ -22,6 +22,8 @@ use std::cmp::Ordering;
 use std::mem;
 use std::{iter, vec};
 
+pub mod nonzero;
+
 #[cfg_attr(feature = "serialize", derive(Deserialize, Serialize))]
 #[cfg_attr(
     feature = "serialize",
