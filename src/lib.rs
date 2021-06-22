@@ -140,6 +140,11 @@ impl<T> NonEmpty<T> {
         self.tail.len() + 1
     }
 
+    /// Get the capacity of the list.
+    pub fn capacity(&self) -> usize {
+        self.tail.capacity() + 1
+    }
+
     /// Get the last element. Never fails.
     pub fn last(&self) -> &T {
         match self.tail.last() {
