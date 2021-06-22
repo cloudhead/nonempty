@@ -744,6 +744,37 @@ impl<T> IntoIterator for NonEmpty<T> {
     }
 }
 
+impl<T> std::ops::Index<usize> for NonEmpty<T> {
+    type Output = T;
+
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let non_empty = NonEmpty::from((1, vec![2, 3, 4, 5]));
+    ///
+    /// assert_eq!(non_empty[0], 1);
+    /// assert_eq!(non_empty[1], 2);
+    /// assert_eq!(non_empty[3], 4);
+    /// ```
+    fn index(&self, index: usize) -> &T {
+        if index > 0 {
+            &self.tail[index - 1]
+        } else {
+            &self.head
+        }
+    }
+}
+
+impl<T> std::ops::IndexMut<usize> for NonEmpty<T> {
+    fn index_mut(&mut self, index: usize) -> &mut T {
+        if index > 0 {
+            &mut self.tail[index - 1]
+        } else {
+            &mut self.head
+        }
+    }
+}
+
 #[cfg(feature = "serialize")]
 pub mod serialize {
     use std::{convert::TryFrom, fmt};
