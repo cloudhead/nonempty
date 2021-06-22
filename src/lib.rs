@@ -744,6 +744,15 @@ impl<T> IntoIterator for NonEmpty<T> {
     }
 }
 
+impl<'a, T> IntoIterator for &'a NonEmpty<T> {
+    type Item = &'a T;
+    type IntoIter = iter::Chain<iter::Once<&'a T>, std::slice::Iter<'a, T>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        iter::once(&self.head).chain(self.tail.iter())
+    }
+}
+
 impl<T> std::ops::Index<usize> for NonEmpty<T> {
     type Output = T;
 
@@ -825,6 +834,15 @@ mod tests {
         for (i, n) in nonempty.into_iter().enumerate() {
             assert_eq!(i as i32, n);
         }
+    }
+
+    #[test]
+    fn test_iter_syntax() {
+        let nonempty = NonEmpty::from((0, vec![1, 2, 3]));
+        for n in &nonempty {
+            assert_eq!(*n, *n); // Prove that we're dealing with references.
+        }
+        for _ in nonempty {}
     }
 
     #[test]
