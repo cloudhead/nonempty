@@ -24,6 +24,33 @@ use std::{iter, vec};
 
 pub mod nonzero;
 
+/// Like the `vec!` macro, but enforces at least one argument. A nice short-hand
+/// for constructing [`NonEmpty`] values.
+///
+/// ```
+/// use nonempty::{NonEmpty, nev};
+///
+/// let v = nev![1, 2, 3];
+/// assert_eq!(v, NonEmpty { head: 1, tail: vec![2, 3] });
+///
+/// let v = nev![1];
+/// assert_eq!(v, NonEmpty { head: 1, tail: Vec::new() });
+///
+/// // Doesn't compile!
+/// // let v = nev![];
+/// ```
+#[macro_export]
+macro_rules! nev {
+    ($h:expr, $( $x:expr ),*) => {{
+        let mut tail = Vec::new();
+        $( tail.push($x); )*
+        NonEmpty { head: $h, tail }
+    }};
+    ($h:expr) => {
+        NonEmpty { head: $h, tail: Vec::new() }
+    }
+}
+
 #[cfg_attr(feature = "serialize", derive(Deserialize, Serialize))]
 #[cfg_attr(
     feature = "serialize",
