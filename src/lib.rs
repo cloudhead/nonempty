@@ -786,6 +786,26 @@ impl<T> std::ops::IndexMut<usize> for NonEmpty<T> {
     }
 }
 
+/// An [`Iterator`] that is guaranteed to have at least one item.
+pub trait NonEmptyIterator: Iterator {
+    /// The first element of the `Iterator`.
+    fn initial(&self) -> &Self::Item;
+}
+
+/// Conversion into a [`NonEmptyIterator`].
+pub trait IntoNonEmptyIterator {
+    type Item;
+
+    type IntoIter: NonEmptyIterator<Item = Self::Item>;
+
+    fn into_nonempty_iter(self) -> Self::IntoIter;
+}
+
+/// Conversion from a [`NonEmptyIterator`].
+pub trait FromNonEmptyIterator<A>: Sized {
+    fn from_nonempty_iter<I: IntoNonEmptyIterator<Item = A>>(iter: I) -> Self;
+}
+
 #[cfg(feature = "serialize")]
 pub mod serialize {
     use std::{convert::TryFrom, fmt};
