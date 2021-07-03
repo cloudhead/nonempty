@@ -786,10 +786,14 @@ impl<T> std::ops::IndexMut<usize> for NonEmpty<T> {
     }
 }
 
+// TODO Needs a `collect` method?
 /// An [`Iterator`] that is guaranteed to have at least one item.
 pub trait NonEmptyIterator: Iterator {
     /// The first element of the `Iterator`.
-    fn initial(&self) -> &Self::Item;
+    ///
+    /// If called before `next` is first called, the first `next` will/must
+    /// _not_ yield this initial value!
+    fn initial(&mut self) -> Self::Item;
 }
 
 /// Conversion into a [`NonEmptyIterator`].
@@ -805,6 +809,52 @@ pub trait IntoNonEmptyIterator {
 pub trait FromNonEmptyIterator<A>: Sized {
     fn from_nonempty_iter<I: IntoNonEmptyIterator<Item = A>>(iter: I) -> Self;
 }
+
+pub struct Iter<'a, T: 'a> {
+    head: &'a T,
+    used: bool,
+    iter: std::slice::Iter<'a, T>,
+}
+
+impl<'a, T> Iterator for Iter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.used {
+            self.iter.next()
+        } else {
+            self.used = true;
+            Some(self.head)
+        }
+    }
+}
+
+impl<'a, T> NonEmptyIterator for Iter<'a, T> {
+    fn initial(&mut self) -> &'a T {
+        self.used = true;
+        self.head
+    }
+}
+
+impl<T> FromNonEmptyIterator<T> for NonEmpty<T> {
+    fn from_nonempty_iter<I: IntoNonEmptyIterator<Item = T>>(iter: I) -> Self {
+        let mut i = iter.into_nonempty_iter();
+        let head = i.initial();
+        let tail = i.collect();
+
+        NonEmpty { head, tail }
+    }
+}
+
+// impl<T> IntoNonEmptyIterator for NonEmpty<T> {
+//     type Item;
+
+//     type IntoIter = Iter<'_, T>;
+
+//     fn into_nonempty_iter(self) -> Self::IntoIter {
+//         todo!()
+//     }
+// }
 
 #[cfg(feature = "serialize")]
 pub mod serialize {
