@@ -16,24 +16,24 @@
 //!
 //! # Examples
 //!
-//! The simplest way to construct a [`NonEmpty`] is via the [`nev`] macro:
+//! The simplest way to construct a [`NonEmpty`] is via the [`nonempty`] macro:
 //!
 //! ```
-//! use nonempty::{NonEmpty, nev};
+//! use nonempty::{NonEmpty, nonempty};
 //!
-//! let l: NonEmpty<u32> = nev![1, 2, 3];
+//! let l: NonEmpty<u32> = nonempty![1, 2, 3];
 //! assert_eq!(l.head, 1);
 //! ```
 //!
-//! Unlike the familiar `vec!` macro, `nev!` requires at least one element:
+//! Unlike the familiar `vec!` macro, `nonempty!` requires at least one element:
 //!
 //! ```
-//! use nonempty::nev;
+//! use nonempty::nonempty;
 //!
-//! let l = nev![1];
+//! let l = nonempty![1];
 //!
 //! // Doesn't compile!
-//! // let l = nev![];
+//! // let l = nonempty![];
 //! ```
 //!
 //! Like `Vec`, you can also construct a [`NonEmpty`] the old fashioned way with
@@ -52,14 +52,14 @@
 //! And if necessary, you're free to convert to and from `Vec`:
 //!
 //! ```
-//! use nonempty::{NonEmpty, nev};
+//! use nonempty::{NonEmpty, nonempty};
 //!
-//! let l: NonEmpty<u32> = nev![42, 36, 58, 9001];
+//! let l: NonEmpty<u32> = nonempty![42, 36, 58, 9001];
 //! let v: Vec<u32> = l.into();
 //! assert_eq!(v, vec![42, 36, 58, 9001]);
 //!
 //! let u: Option<NonEmpty<u32>> = NonEmpty::from_vec(v);
-//! assert_eq!(Some(nev![42, 36, 58, 9001]), u);
+//! assert_eq!(Some(nonempty![42, 36, 58, 9001]), u);
 //! ```
 //!
 //! # Caveats
@@ -83,19 +83,19 @@ pub mod nonzero;
 /// for constructing [`NonEmpty`] values.
 ///
 /// ```
-/// use nonempty::{NonEmpty, nev};
+/// use nonempty::{NonEmpty, nonempty};
 ///
-/// let v = nev![1, 2, 3];
+/// let v = nonempty![1, 2, 3];
 /// assert_eq!(v, NonEmpty { head: 1, tail: vec![2, 3] });
 ///
-/// let v = nev![1];
+/// let v = nonempty![1];
 /// assert_eq!(v, NonEmpty { head: 1, tail: Vec::new() });
 ///
 /// // Doesn't compile!
-/// // let v = nev![];
+/// // let v = nonempty![];
 /// ```
 #[macro_export]
-macro_rules! nev {
+macro_rules! nonempty {
     ($h:expr, $( $x:expr ),*) => {{
         let mut tail = Vec::new();
         $( tail.push($x); )*
