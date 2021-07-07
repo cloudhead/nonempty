@@ -1,8 +1,5 @@
 use std::num::NonZeroUsize;
 
-#[cfg(feature = "serialize")]
-use serde::{Deserialize, Serialize};
-
 /// A non-empty list which statically guarantees certain operations
 /// cannot return zero, using [`std::num::NonZeroUsize`].
 ///
