@@ -1,21 +1,76 @@
 //! A Non-empty growable vector.
 //!
+//! Non-emptiness can be a powerful guarantee. If your main use of `Vec` is as
+//! an `Iterator`, then you may not need to distinguish on emptiness. But there
+//! are indeed times when the `Vec` you receive as as function argument needs to
+//! be non-empty or your function can't proceed. Similarly, there are times when
+//! the `Vec` you return to a calling user needs to promise it actually contains
+//! something.
+//!
+//! With `NonEmpty`, you're freed from the boilerplate of constantly needing to
+//! check `is_empty()` or pattern matching before proceeding, or erroring if you
+//! can't. So overall, code, type signatures, and logic become cleaner.
+//!
+//! Consider that unlike `Vec`, [`NonEmpty::first`] and [`NonEmpty::last`] don't
+//! return in `Option`, they always succeed.
+//!
 //! # Examples
+//!
+//! The simplest way to construct a [`NonEmpty`] is via the [`nonempty`] macro:
+//!
+//! ```
+//! use nonempty::{NonEmpty, nonempty};
+//!
+//! let l: NonEmpty<u32> = nonempty![1, 2, 3];
+//! assert_eq!(l.head, 1);
+//! ```
+//!
+//! Unlike the familiar `vec!` macro, `nonempty!` requires at least one element:
+//!
+//! ```
+//! use nonempty::nonempty;
+//!
+//! let l = nonempty![1];
+//!
+//! // Doesn't compile!
+//! // let l = nonempty![];
+//! ```
+//!
+//! Like `Vec`, you can also construct a [`NonEmpty`] the old fashioned way with
+//! [`NonEmpty::new`] or its constructor:
 //!
 //! ```
 //! use nonempty::NonEmpty;
 //!
 //! let mut l = NonEmpty { head: 42, tail: vec![36, 58] };
-//!
 //! assert_eq!(l.head, 42);
 //!
 //! l.push(9001);
-//!
 //! assert_eq!(l.last(), &9001);
-//!
-//! let v: Vec<i32> = l.into();
-//! assert_eq!(v, vec![42, 36, 58, 9001]);
 //! ```
+//!
+//! And if necessary, you're free to convert to and from `Vec`:
+//!
+//! ```
+//! use nonempty::{NonEmpty, nonempty};
+//!
+//! let l: NonEmpty<u32> = nonempty![42, 36, 58, 9001];
+//! let v: Vec<u32> = l.into();
+//! assert_eq!(v, vec![42, 36, 58, 9001]);
+//!
+//! let u: Option<NonEmpty<u32>> = NonEmpty::from_vec(v);
+//! assert_eq!(Some(nonempty![42, 36, 58, 9001]), u);
+//! ```
+//!
+//! # Caveats
+//!
+//! Since `NonEmpty` must have a least one element, it is not possible to
+//! implement the `FromInterator` trait for it. We can't know, in general, if
+//! any given `Iterator` actually contains something.
+//!
+//! # Features
+//!
+//! * `serialize`: `serde` support.
 #[cfg(feature = "serialize")]
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
@@ -23,6 +78,33 @@ use std::mem;
 use std::{iter, vec};
 
 pub mod nonzero;
+
+/// Like the `vec!` macro, but enforces at least one argument. A nice short-hand
+/// for constructing [`NonEmpty`] values.
+///
+/// ```
+/// use nonempty::{NonEmpty, nonempty};
+///
+/// let v = nonempty![1, 2, 3];
+/// assert_eq!(v, NonEmpty { head: 1, tail: vec![2, 3] });
+///
+/// let v = nonempty![1];
+/// assert_eq!(v, NonEmpty { head: 1, tail: Vec::new() });
+///
+/// // Doesn't compile!
+/// // let v = nonempty![];
+/// ```
+#[macro_export]
+macro_rules! nonempty {
+    ($h:expr, $( $x:expr ),*) => {{
+        let mut tail = Vec::new();
+        $( tail.push($x); )*
+        $crate::NonEmpty { head: $h, tail }
+    }};
+    ($h:expr) => {
+        $crate::NonEmpty { head: $h, tail: Vec::new() }
+    }
+}
 
 #[cfg_attr(feature = "serialize", derive(Deserialize, Serialize))]
 #[cfg_attr(
