@@ -924,7 +924,7 @@ mod tests {
     fn test_iter_syntax() {
         let nonempty = NonEmpty::from((0, vec![1, 2, 3]));
         for n in &nonempty {
-            assert_eq!(*n, *n); // Prove that we're dealing with references.
+            let _ = *n; // Prove that we're dealing with references.
         }
         for _ in nonempty {}
     }
