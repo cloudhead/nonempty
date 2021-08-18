@@ -153,7 +153,7 @@ impl<'a, T> DoubleEndedIterator for NonEmptyIter<'a, T> {
 
 impl<'a, T> ExactSizeIterator for NonEmptyIter<'a, T> {
     fn len(&self) -> usize {
-        self.tail.len() + if self.head.is_some() { 1 } else { 0}
+        self.tail.len() + self.head.map_or(0, |_| 1)
     }
 }
 
@@ -340,10 +340,10 @@ impl<T> NonEmpty<T> {
     /// assert_eq!(l_iter.next(), Some(&58));
     /// assert_eq!(l_iter.next(), None);
     /// ```
-    pub fn iter<'a>(&'a self) -> NonEmptyIter<'a, T> {
+    pub fn iter(&self) -> NonEmptyIter<T> {
         NonEmptyIter {
             head: Some(&self.head),
-            tail: &self.tail
+            tail: &self.tail,
         }
     }
 
@@ -766,9 +766,9 @@ impl<T> NonEmpty<T> {
     {
         let mut max = &self.head;
         for i in self.tail.iter() {
-            max = match compare(&max, &i) {
+            max = match compare(max, i) {
                 Ordering::Equal => max,
-                Ordering::Less => &i,
+                Ordering::Less => i,
                 Ordering::Greater => max,
             };
         }
@@ -977,8 +977,14 @@ mod tests {
     #[test]
     fn test_iter_both_directions() {
         let nonempty = NonEmpty::from((0, vec![1, 2, 3]));
-        assert_eq!(nonempty.iter().cloned().collect::<Vec<_>>(), vec![0, 1, 2, 3]);
-        assert_eq!(nonempty.iter().rev().cloned().collect::<Vec<_>>(), vec![3, 2, 1, 0]);
+        assert_eq!(
+            nonempty.iter().cloned().collect::<Vec<_>>(),
+            vec![0, 1, 2, 3]
+        );
+        assert_eq!(
+            nonempty.iter().rev().cloned().collect::<Vec<_>>(),
+            vec![3, 2, 1, 0]
+        );
     }
 
     #[test]
