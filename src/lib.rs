@@ -118,6 +118,47 @@ pub struct NonEmpty<T> {
     pub tail: Vec<T>,
 }
 
+pub struct Iter<'a, T> {
+    head: Option<&'a T>,
+    tail: &'a [T],
+}
+
+impl<'a, T> Iterator for Iter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(value) = self.head.take() {
+            Some(value)
+        } else if let Some((first, rest)) = self.tail.split_first() {
+            self.tail = rest;
+            Some(first)
+        } else {
+            None
+        }
+    }
+}
+
+impl<'a, T> DoubleEndedIterator for Iter<'a, T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if let Some((last, rest)) = self.tail.split_last() {
+            self.tail = rest;
+            Some(last)
+        } else if let Some(first_value) = self.head.take() {
+            Some(first_value)
+        } else {
+            None
+        }
+    }
+}
+
+impl<'a, T> ExactSizeIterator for Iter<'a, T> {
+    fn len(&self) -> usize {
+        self.tail.len() + self.head.map_or(0, |_| 1)
+    }
+}
+
+impl<'a, T> core::iter::FusedIterator for Iter<'a, T> {}
+
 impl<T> NonEmpty<T> {
     /// Alias for [`NonEmpty::singleton`].
     pub const fn new(e: T) -> Self {
@@ -293,13 +334,17 @@ impl<T> NonEmpty<T> {
     ///
     /// let mut l_iter = l.iter();
     ///
+    /// assert_eq!(l_iter.len(), 3);
     /// assert_eq!(l_iter.next(), Some(&42));
     /// assert_eq!(l_iter.next(), Some(&36));
     /// assert_eq!(l_iter.next(), Some(&58));
     /// assert_eq!(l_iter.next(), None);
     /// ```
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = &T> + 'a {
-        iter::once(&self.head).chain(self.tail.iter())
+    pub fn iter(&self) -> Iter<T> {
+        Iter {
+            head: Some(&self.head),
+            tail: &self.tail,
+        }
     }
 
     /// ```
@@ -721,9 +766,9 @@ impl<T> NonEmpty<T> {
     {
         let mut max = &self.head;
         for i in self.tail.iter() {
-            max = match compare(&max, &i) {
+            max = match compare(max, i) {
                 Ordering::Equal => max,
-                Ordering::Less => &i,
+                Ordering::Less => i,
                 Ordering::Greater => max,
             };
         }
@@ -927,6 +972,31 @@ mod tests {
             let _ = *n; // Prove that we're dealing with references.
         }
         for _ in nonempty {}
+    }
+
+    #[test]
+    fn test_iter_both_directions() {
+        let nonempty = NonEmpty::from((0, vec![1, 2, 3]));
+        assert_eq!(
+            nonempty.iter().cloned().collect::<Vec<_>>(),
+            vec![0, 1, 2, 3]
+        );
+        assert_eq!(
+            nonempty.iter().rev().cloned().collect::<Vec<_>>(),
+            vec![3, 2, 1, 0]
+        );
+    }
+
+    #[test]
+    fn test_iter_both_directions_at_once() {
+        let nonempty = NonEmpty::from((0, vec![1, 2, 3]));
+        let mut i = nonempty.iter();
+        assert_eq!(i.next(), Some(&0));
+        assert_eq!(i.next_back(), Some(&3));
+        assert_eq!(i.next(), Some(&1));
+        assert_eq!(i.next_back(), Some(&2));
+        assert_eq!(i.next(), None);
+        assert_eq!(i.next_back(), None);
     }
 
     #[test]
