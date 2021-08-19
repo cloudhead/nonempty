@@ -118,12 +118,12 @@ pub struct NonEmpty<T> {
     pub tail: Vec<T>,
 }
 
-pub struct NonEmptyIter<'a, T> {
+pub struct Iter<'a, T> {
     head: Option<&'a T>,
     tail: &'a [T],
 }
 
-impl<'a, T> Iterator for NonEmptyIter<'a, T> {
+impl<'a, T> Iterator for Iter<'a, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -138,7 +138,7 @@ impl<'a, T> Iterator for NonEmptyIter<'a, T> {
     }
 }
 
-impl<'a, T> DoubleEndedIterator for NonEmptyIter<'a, T> {
+impl<'a, T> DoubleEndedIterator for Iter<'a, T> {
     fn next_back(&mut self) -> Option<Self::Item> {
         if let Some((last, rest)) = self.tail.split_last() {
             self.tail = rest;
@@ -151,13 +151,13 @@ impl<'a, T> DoubleEndedIterator for NonEmptyIter<'a, T> {
     }
 }
 
-impl<'a, T> ExactSizeIterator for NonEmptyIter<'a, T> {
+impl<'a, T> ExactSizeIterator for Iter<'a, T> {
     fn len(&self) -> usize {
         self.tail.len() + self.head.map_or(0, |_| 1)
     }
 }
 
-impl<'a, T> core::iter::FusedIterator for NonEmptyIter<'a, T> {}
+impl<'a, T> core::iter::FusedIterator for Iter<'a, T> {}
 
 impl<T> NonEmpty<T> {
     /// Alias for [`NonEmpty::singleton`].
@@ -340,8 +340,8 @@ impl<T> NonEmpty<T> {
     /// assert_eq!(l_iter.next(), Some(&58));
     /// assert_eq!(l_iter.next(), None);
     /// ```
-    pub fn iter(&self) -> NonEmptyIter<T> {
-        NonEmptyIter {
+    pub fn iter(&self) -> Iter<T> {
+        Iter {
             head: Some(&self.head),
             tail: &self.tail,
         }
