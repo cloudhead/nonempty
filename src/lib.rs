@@ -842,6 +842,12 @@ impl<T> NonEmpty<T> {
     }
 }
 
+impl<T: Default> Default for NonEmpty<T> {
+    fn default() -> Self {
+        Self::new(T::default())
+    }
+}
+
 impl<T> From<NonEmpty<T>> for Vec<T> {
     /// Turns a non-empty list into a Vec.
     fn from(nonempty: NonEmpty<T>) -> Vec<T> {
