@@ -72,7 +72,10 @@
 //!
 //! * `serialize`: `serde` support.
 #[cfg(feature = "serialize")]
-use serde::{Deserialize, Serialize};
+use serde::{
+    ser::{SerializeSeq, Serializer},
+    Deserialize, Serialize,
+};
 use std::cmp::Ordering;
 use std::mem;
 use std::{iter, vec};
@@ -108,16 +111,32 @@ macro_rules! nonempty {
     };
 }
 
-#[cfg_attr(feature = "serialize", derive(Deserialize, Serialize))]
-#[cfg_attr(
-    feature = "serialize",
-    serde(bound(serialize = "T: Clone + Serialize")),
-    serde(into = "Vec<T>", try_from = "Vec<T>")
-)]
+/// Non-empty vector.
+#[cfg_attr(feature = "serialize", derive(Deserialize))]
+#[cfg_attr(feature = "serialize", serde(try_from = "Vec<T>"))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NonEmpty<T> {
     pub head: T,
     pub tail: Vec<T>,
+}
+
+// Nb. `Serialize` is implemented manually, as serde's `into` container attribute
+// requires a `T: Clone` bound which we'd like to avoid.
+#[cfg(feature = "serialize")]
+impl<T> Serialize for NonEmpty<T>
+where
+    T: Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(self.len()))?;
+        for e in self {
+            seq.serialize_element(e)?;
+        }
+        seq.end()
+    }
 }
 
 pub struct Iter<'a, T> {
@@ -1029,7 +1048,7 @@ mod tests {
         use crate::NonEmpty;
         use serde::{Deserialize, Serialize};
 
-        #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+        #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
         pub struct SimpleSerializable(pub i32);
 
         #[test]
@@ -1037,7 +1056,6 @@ mod tests {
             // Given
             let mut non_empty = NonEmpty::new(SimpleSerializable(42));
             non_empty.push(SimpleSerializable(777));
-            let expected_value = non_empty.clone();
 
             // When
             let res = serde_json::from_str::<'_, NonEmpty<SimpleSerializable>>(
@@ -1045,7 +1063,17 @@ mod tests {
             )?;
 
             // Then
-            assert_eq!(res, expected_value);
+            assert_eq!(res, non_empty);
+
+            Ok(())
+        }
+
+        #[test]
+        fn test_serialization() -> Result<(), Box<dyn std::error::Error>> {
+            let ne = nonempty![1, 2, 3, 4, 5];
+            let ve = vec![1, 2, 3, 4, 5];
+
+            assert_eq!(serde_json::to_string(&ne)?, serde_json::to_string(&ve)?);
 
             Ok(())
         }
