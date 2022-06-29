@@ -919,6 +919,12 @@ impl<T> std::ops::IndexMut<usize> for NonEmpty<T> {
     }
 }
 
+impl<A> Extend<A> for NonEmpty<A> {
+    fn extend<T: IntoIterator<Item = A>>(&mut self, iter: T) {
+        self.tail.extend(iter)
+    }
+}
+
 #[cfg(feature = "serialize")]
 pub mod serialize {
     use std::{convert::TryFrom, fmt};
