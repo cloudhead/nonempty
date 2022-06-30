@@ -97,13 +97,15 @@ pub mod nonzero;
 #[macro_export]
 macro_rules! nonempty {
     ($h:expr, $( $x:expr ),*) => {{
-        let mut tail = Vec::new();
-        $( tail.push($x); )*
+        let tail = vec![$($x),*];
         $crate::NonEmpty { head: $h, tail }
     }};
     ($h:expr) => {
-        $crate::NonEmpty { head: $h, tail: Vec::new() }
-    }
+        $crate::NonEmpty {
+            head: $h,
+            tail: Vec::new(),
+        }
+    };
 }
 
 #[cfg_attr(feature = "serialize", derive(Deserialize, Serialize))]
