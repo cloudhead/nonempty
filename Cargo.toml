@@ -1,6 +1,6 @@
 [package]
 name = "nonempty"
-version = "0.8.0"
+version = "0.8.1"
 description = "Correct by construction non-empty vector"
 authors = ["Alexis Sellier <self@cloudhead.io>"]
 edition = "2018"
