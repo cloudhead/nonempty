@@ -186,6 +186,20 @@ impl<T> NonEmpty<T> {
         Self::singleton(e)
     }
 
+    /// Attempt to convert an iterator into a `NonEmpty` vector.
+    /// Returns `None` if the iterator was empty.
+    pub fn collect<I>(iter: I) -> Option<NonEmpty<T>>
+    where
+        I: IntoIterator<Item = T>,
+    {
+        let mut iter = iter.into_iter();
+        let head = iter.next()?;
+        Some(Self {
+            head,
+            tail: iter.collect(),
+        })
+    }
+
     /// Create a new non-empty list with an initial element.
     pub const fn singleton(head: T) -> Self {
         NonEmpty {
@@ -386,7 +400,7 @@ impl<T> NonEmpty<T> {
     /// assert_eq!(l_iter.next(), Some(&580));
     /// assert_eq!(l_iter.next(), None);
     /// ```
-    pub fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &mut T> + 'a {
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> + '_ {
         iter::once(&mut self.head).chain(self.tail.iter_mut())
     }
 
@@ -540,6 +554,17 @@ impl<T> NonEmpty<T> {
             head: f(self.head),
             tail: self.tail.into_iter().map(f).collect(),
         }
+    }
+
+    /// A structure preserving, fallible mapping function.
+    pub fn try_map<E, U, F>(self, mut f: F) -> Result<NonEmpty<U>, E>
+    where
+        F: FnMut(T) -> Result<U, E>,
+    {
+        Ok(NonEmpty {
+            head: f(self.head)?,
+            tail: self.tail.into_iter().map(f).collect::<Result<_, _>>()?,
+        })
     }
 
     /// When we have a function that goes from some `T` to a `NonEmpty<U>`,
@@ -1041,6 +1066,30 @@ mod tests {
         let mut non_empty = NonEmpty::from((1, vec![4, 2, 3]));
         non_empty.head *= 42;
         assert_eq!(non_empty.head, 42);
+    }
+
+    #[test]
+    fn test_to_nonempty() {
+        use std::iter::{empty, once};
+
+        assert_eq!(NonEmpty::<()>::collect(empty()), None);
+        assert_eq!(NonEmpty::<()>::collect(once(())), Some(NonEmpty::new(())));
+        assert_eq!(
+            NonEmpty::<u8>::collect(once(1).chain(once(2))),
+            Some(nonempty!(1, 2))
+        );
+    }
+
+    #[test]
+    fn test_try_map() {
+        assert_eq!(
+            nonempty!(1, 2, 3, 4).try_map(Ok::<_, String>),
+            Ok(nonempty!(1, 2, 3, 4))
+        );
+        assert_eq!(
+            nonempty!(1, 2, 3, 4).try_map(|i| if i % 2 == 0 { Ok(i) } else { Err("not even") }),
+            Err("not even")
+        );
     }
 
     #[cfg(feature = "serialize")]
