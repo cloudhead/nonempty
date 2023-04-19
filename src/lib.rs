@@ -810,9 +810,9 @@ impl<T> NonEmpty<T> {
     /// let non_empty = NonEmpty::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
     /// assert_eq!(non_empty.maximum_by(|(k, _), (l, _)| k.cmp(l)), &(4, 42));
     /// ```
-    pub fn maximum_by<F>(&self, compare: F) -> &T
+    pub fn maximum_by<'a, F>(&'a self, mut compare: F) -> &T
     where
-        F: Fn(&T, &T) -> Ordering,
+        F: FnMut(&'a T, &'a T) -> Ordering,
     {
         let mut max = &self.head;
         for i in self.tail.iter() {
@@ -838,9 +838,9 @@ impl<T> NonEmpty<T> {
     /// let non_empty = NonEmpty::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
     /// assert_eq!(non_empty.minimum_by(|(k, _), (l, _)| k.cmp(l)), &(0, 76));
     /// ```
-    pub fn minimum_by<F>(&self, compare: F) -> &T
+    pub fn minimum_by<'a, F>(&'a self, mut compare: F) -> &T
     where
-        F: Fn(&T, &T) -> Ordering,
+        F: FnMut(&'a T, &'a T) -> Ordering,
     {
         self.maximum_by(|a, b| compare(a, b).reverse())
     }
@@ -860,12 +860,12 @@ impl<T> NonEmpty<T> {
     /// let non_empty = NonEmpty::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
     /// assert_eq!(non_empty.maximum_by_key(|(k, _)| k), &(4, 42));
     /// ```
-    pub fn maximum_by_key<U, F>(&self, f: F) -> &T
+    pub fn maximum_by_key<'a, U, F>(&'a self, mut f: F) -> &T
     where
         U: Ord,
-        F: Fn(&T) -> &U,
+        F: FnMut(&'a T) -> U,
     {
-        self.maximum_by(|i, j| f(i).cmp(f(j)))
+        self.maximum_by(|i, j| f(i).cmp(&f(j)))
     }
 
     /// Returns the element that gives the minimum value with respect to the specified function.
@@ -883,12 +883,12 @@ impl<T> NonEmpty<T> {
     /// let non_empty = NonEmpty::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
     /// assert_eq!(non_empty.minimum_by_key(|(k, _)| k), &(0, 76));
     /// ```
-    pub fn minimum_by_key<U, F>(&self, f: F) -> &T
+    pub fn minimum_by_key<'a, U, F>(&'a self, mut f: F) -> &T
     where
         U: Ord,
-        F: Fn(&T) -> &U,
+        F: FnMut(&'a T) -> U,
     {
-        self.minimum_by(|i, j| f(i).cmp(f(j)))
+        self.minimum_by(|i, j| f(i).cmp(&f(j)))
     }
 }
 
