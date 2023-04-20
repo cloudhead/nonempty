@@ -859,6 +859,7 @@ impl<T> NonEmpty<T> {
     ///
     /// let non_empty = NonEmpty::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
     /// assert_eq!(non_empty.maximum_by_key(|(k, _)| k), &(4, 42));
+    /// assert_eq!(non_empty.maximum_by_key(|(k, _)| -k), &(0, 76));
     /// ```
     pub fn maximum_by_key<'a, U, F>(&'a self, mut f: F) -> &T
     where
@@ -882,6 +883,7 @@ impl<T> NonEmpty<T> {
     ///
     /// let non_empty = NonEmpty::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
     /// assert_eq!(non_empty.minimum_by_key(|(k, _)| k), &(0, 76));
+    /// assert_eq!(non_empty.minimum_by_key(|(k, _)| -k), &(4, 42));
     /// ```
     pub fn minimum_by_key<'a, U, F>(&'a self, mut f: F) -> &T
     where
