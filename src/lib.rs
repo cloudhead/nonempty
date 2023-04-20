@@ -1098,6 +1098,30 @@ mod tests {
         );
     }
 
+    #[test]
+    fn test_nontrivial_minimum_by_key() {
+        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+        struct Position {
+            x: i32,
+            y: i32,
+        }
+        impl Position {
+            pub fn distance_squared(&self, other: Position) -> u32 {
+                let dx = self.x - other.x;
+                let dy = self.y - other.y;
+                (dx * dx + dy * dy) as u32
+            }
+        }
+        let positions = nonempty![
+            Position { x: 1, y: 1 },
+            Position { x: 0, y: 0 },
+            Position { x: 3, y: 4 }
+        ];
+        let target = Position { x: 1, y: 2 };
+        let closest = positions.minimum_by_key(|position| position.distance_squared(target));
+        assert_eq!(closest, &Position { x: 1, y: 1 });
+    }
+
     #[cfg(feature = "serialize")]
     mod serialize {
         use crate::NonEmpty;
