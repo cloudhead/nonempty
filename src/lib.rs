@@ -94,12 +94,16 @@ pub mod nonzero;
 /// let v = nonempty![1];
 /// assert_eq!(v, NonEmpty { head: 1, tail: Vec::new() });
 ///
+/// // Accepts trailing commas
+/// let v = nonempty![1,];
+/// assert_eq!(v, NonEmpty { head: 1, tail: Vec::new() });
+///
 /// // Doesn't compile!
 /// // let v = nonempty![];
 /// ```
 #[macro_export]
 macro_rules! nonempty {
-    ($h:expr, $( $x:expr ),*) => {{
+    ($h:expr, $( $x:expr ),* $(,)?) => {{
         let tail = vec![$($x),*];
         $crate::NonEmpty { head: $h, tail }
     }};
