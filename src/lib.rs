@@ -404,7 +404,7 @@ impl<T> NonEmpty<T> {
     /// assert_eq!(l_iter.next(), Some(&580));
     /// assert_eq!(l_iter.next(), None);
     /// ```
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> + '_ {
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> + DoubleEndedIterator + '_ {
         iter::once(&mut self.head).chain(self.tail.iter_mut())
     }
 
@@ -1040,14 +1040,15 @@ mod tests {
 
     #[test]
     fn test_iter_both_directions() {
-        let nonempty = NonEmpty::from((0, vec![1, 2, 3]));
-        assert_eq!(
-            nonempty.iter().cloned().collect::<Vec<_>>(),
-            vec![0, 1, 2, 3]
-        );
+        let mut nonempty = NonEmpty::from((0, vec![1, 2, 3]));
+        assert_eq!(nonempty.iter().cloned().collect::<Vec<_>>(), [0, 1, 2, 3]);
         assert_eq!(
             nonempty.iter().rev().cloned().collect::<Vec<_>>(),
-            vec![3, 2, 1, 0]
+            [3, 2, 1, 0]
+        );
+        assert_eq!(
+            nonempty.iter_mut().rev().collect::<Vec<_>>(),
+            [&mut 3, &mut 2, &mut 1, &mut 0]
         );
     }
 
