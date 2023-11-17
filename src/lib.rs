@@ -76,8 +76,8 @@ use serde::{
     ser::{SerializeSeq, Serializer},
     Deserialize, Serialize,
 };
-use std::cmp::Ordering;
 use std::mem;
+use std::{cmp::Ordering, num::NonZeroUsize};
 use std::{iter, vec};
 
 pub mod nonzero;
@@ -302,6 +302,11 @@ impl<T> NonEmpty<T> {
     /// Get the length of the list.
     pub fn len(&self) -> usize {
         self.tail.len() + 1
+    }
+
+    /// Gets the length of the list as a NonZeroUsize.
+    pub fn len_nonzero(&self) -> NonZeroUsize {
+        unsafe { NonZeroUsize::new_unchecked(self.tail.len().saturating_add(1)) }
     }
 
     /// Get the capacity of the list.
