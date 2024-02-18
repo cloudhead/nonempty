@@ -1177,4 +1177,37 @@ mod tests {
             Ok(())
         }
     }
+
+    #[cfg(feature = "arbitrary")]
+    mod arbitrary {
+        use crate::NonEmpty;
+        use arbitrary::{Arbitrary, Unstructured};
+
+        #[derive(Debug, Eq, PartialEq, arbitrary::Arbitrary)]
+        pub struct SimpleArbitrary(pub i32);
+
+        #[test]
+        fn test_arbitrary_empty_tail() -> arbitrary::Result<()> {
+            let mut u = Unstructured::new(&[1, 2, 3, 4]);
+            let ne = NonEmpty::<SimpleArbitrary>::arbitrary(&mut u)?;
+            assert!(!ne.is_empty());
+            assert_eq!(ne[0], SimpleArbitrary(67305985));
+            Ok(())
+        }
+
+        #[test]
+        fn test_arbitrary_with_tail() -> arbitrary::Result<()> {
+            let mut u = Unstructured::new(&[1, 2, 3, 4, 5, 6, 7, 8]);
+            let ne = NonEmpty::<SimpleArbitrary>::arbitrary(&mut u)?;
+            assert!(!ne.is_empty());
+            assert_eq!(
+                ne,
+                NonEmpty {
+                    head: SimpleArbitrary(67305985),
+                    tail: vec![SimpleArbitrary(526086)],
+                }
+            );
+            Ok(())
+        }
+    }
 }
