@@ -71,6 +71,8 @@
 //! # Features
 //!
 //! * `serialize`: `serde` support.
+#[cfg(feature = "arbitrary")]
+use arbitrary::{Arbitrary, Unstructured};
 #[cfg(feature = "serialize")]
 use serde::{
     ser::{SerializeSeq, Serializer},
@@ -140,6 +142,18 @@ where
             seq.serialize_element(e)?;
         }
         seq.end()
+    }
+}
+
+#[cfg(feature = "arbitrary")]
+impl<'a, T> Arbitrary<'a> for NonEmpty<T>
+where
+    T: Arbitrary<'a>,
+{
+    fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
+        let head = T::arbitrary(u)?;
+        let tail = Vec::<T>::arbitrary(u)?;
+        Ok(NonEmpty { head, tail })
     }
 }
 
