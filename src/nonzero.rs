@@ -1,3 +1,5 @@
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
 use std::num::NonZeroUsize;
 
 /// A non-empty list which statically guarantees certain operations
@@ -6,6 +8,7 @@ use std::num::NonZeroUsize;
 /// *Experimental*
 ///
 #[repr(transparent)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NonEmpty<T>(super::NonEmpty<T>);
 
@@ -59,5 +62,35 @@ mod tests {
 
         assert_eq!(nonempty.len(), 4.try_into().unwrap());
         assert_eq!(nonempty.capacity(), 4.try_into().unwrap());
+    }
+
+    #[cfg(feature = "arbitrary")]
+    mod arbitrary {
+        use crate::nonzero;
+        use arbitrary::{Arbitrary, Unstructured};
+
+        use std::convert::TryInto;
+
+        #[test]
+        fn test_nonzero_arbitrary_empty_tail() -> arbitrary::Result<()> {
+            let mut u = Unstructured::new(&[1, 2, 3, 4]);
+            let nonempty: nonzero::NonEmpty<_> = nonzero::NonEmpty::<i32>::arbitrary(&mut u)?;
+
+            assert_eq!(nonempty.len(), 1.try_into().unwrap());
+            assert_eq!(nonempty.capacity(), 1.try_into().unwrap());
+
+            Ok(())
+        }
+
+        #[test]
+        fn test_nonzero_arbitrary_with_tail() -> arbitrary::Result<()> {
+            let mut u = Unstructured::new(&[1, 2, 3, 4, 5, 6, 7, 8]);
+            let nonempty: nonzero::NonEmpty<_> = nonzero::NonEmpty::<i32>::arbitrary(&mut u)?;
+
+            assert_eq!(nonempty.len(), 2.try_into().unwrap());
+            assert_eq!(nonempty.capacity(), 5.try_into().unwrap());
+
+            Ok(())
+        }
     }
 }
