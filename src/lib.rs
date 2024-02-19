@@ -73,7 +73,7 @@
 //! * `serialize`: `serde` support.
 //! * `arbitrary`: `arbitrary` support.
 #[cfg(feature = "arbitrary")]
-use arbitrary::{Arbitrary, Unstructured};
+use arbitrary::Arbitrary;
 #[cfg(feature = "serialize")]
 use serde::{
     ser::{SerializeSeq, Serializer},
@@ -120,6 +120,7 @@ macro_rules! nonempty {
 
 /// Non-empty vector.
 #[cfg_attr(feature = "serialize", derive(Deserialize))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serialize", serde(try_from = "Vec<T>"))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NonEmpty<T> {
@@ -143,18 +144,6 @@ where
             seq.serialize_element(e)?;
         }
         seq.end()
-    }
-}
-
-#[cfg(feature = "arbitrary")]
-impl<'a, T> Arbitrary<'a> for NonEmpty<T>
-where
-    T: Arbitrary<'a>,
-{
-    fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
-        let head = T::arbitrary(u)?;
-        let tail = Vec::<T>::arbitrary(u)?;
-        Ok(NonEmpty { head, tail })
     }
 }
 

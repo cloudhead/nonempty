@@ -9,7 +9,7 @@ repository = "https://github.com/cloudhead/nonempty"
 
 [dependencies]
 serde = { features = ["serde_derive"], optional = true, version = "1" }
-arbitrary = { optional = true, version = "1" }
+arbitrary = { features = ["derive"], optional = true, version = "1" }
 
 [features]
 serialize = ["serde"]
