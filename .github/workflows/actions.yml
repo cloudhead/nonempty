@@ -20,7 +20,7 @@ jobs:
         env:
           RUSTFLAGS: -D warnings
       - name: Run tests
-        run: cargo test --all --verbose --features serialize
+        run: cargo test --all --verbose --features serialize,arbitrary
 
   rustfmt_and_clippy:
     name: Check rustfmt style && run clippy
@@ -42,7 +42,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --all --tests --features serialize
+          args: --all --tests --features serialize,arbitrary
         env:
           RUSTFLAGS: -D warnings
       - name: Check formating

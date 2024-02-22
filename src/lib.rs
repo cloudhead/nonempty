@@ -71,6 +71,9 @@
 //! # Features
 //!
 //! * `serialize`: `serde` support.
+//! * `arbitrary`: `arbitrary` support.
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
 #[cfg(feature = "serialize")]
 use serde::{
     ser::{SerializeSeq, Serializer},
@@ -117,6 +120,7 @@ macro_rules! nonempty {
 
 /// Non-empty vector.
 #[cfg_attr(feature = "serialize", derive(Deserialize))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serialize", serde(try_from = "Vec<T>"))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NonEmpty<T> {
@@ -409,7 +413,7 @@ impl<T> NonEmpty<T> {
     /// assert_eq!(l_iter.next(), Some(&580));
     /// assert_eq!(l_iter.next(), None);
     /// ```
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> + DoubleEndedIterator + '_ {
+    pub fn iter_mut(&mut self) -> impl DoubleEndedIterator<Item = &mut T> + '_ {
         iter::once(&mut self.head).chain(self.tail.iter_mut())
     }
 
@@ -1160,6 +1164,42 @@ mod tests {
 
             assert_eq!(serde_json::to_string(&ne)?, serde_json::to_string(&ve)?);
 
+            Ok(())
+        }
+    }
+
+    #[cfg(feature = "arbitrary")]
+    mod arbitrary {
+        use crate::NonEmpty;
+        use arbitrary::{Arbitrary, Unstructured};
+
+        #[test]
+        fn test_arbitrary_empty_tail() -> arbitrary::Result<()> {
+            let mut u = Unstructured::new(&[1, 2, 3, 4]);
+            let ne = NonEmpty::<i32>::arbitrary(&mut u)?;
+            assert!(!ne.is_empty());
+            assert_eq!(
+                ne,
+                NonEmpty {
+                    head: 67305985,
+                    tail: vec![],
+                }
+            );
+            Ok(())
+        }
+
+        #[test]
+        fn test_arbitrary_with_tail() -> arbitrary::Result<()> {
+            let mut u = Unstructured::new(&[1, 2, 3, 4, 5, 6, 7, 8]);
+            let ne = NonEmpty::<i32>::arbitrary(&mut u)?;
+            assert!(!ne.is_empty());
+            assert_eq!(
+                ne,
+                NonEmpty {
+                    head: 67305985,
+                    tail: vec![526086],
+                }
+            );
             Ok(())
         }
     }
