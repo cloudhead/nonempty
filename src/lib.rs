@@ -194,6 +194,14 @@ impl<T> NonEmpty<T> {
         Self::singleton(e)
     }
 
+    /// Converts from &NonEmpty<T> to NonEmpty<&T>.
+    pub fn as_ref(&self) -> NonEmpty<&T> {
+        NonEmpty {
+            head: &self.head,
+            tail: self.tail.iter().collect(),
+        }
+    }
+
     /// Attempt to convert an iterator into a `NonEmpty` vector.
     /// Returns `None` if the iterator was empty.
     pub fn collect<I>(iter: I) -> Option<NonEmpty<T>>
