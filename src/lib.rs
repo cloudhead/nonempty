@@ -65,7 +65,7 @@
 //! # Caveats
 //!
 //! Since `NonEmpty` must have a least one element, it is not possible to
-//! implement the `FromInterator` trait for it. We can't know, in general, if
+//! implement the [`FromIterator`](https://doc.rust-lang.org/std/iter/trait.FromIterator.html) trait for it. We can't know, in general, if
 //! any given `Iterator` actually contains something.
 //!
 //! # Features
