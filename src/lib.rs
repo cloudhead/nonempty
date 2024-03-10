@@ -65,7 +65,7 @@
 //! # Caveats
 //!
 //! Since `NonEmpty` must have a least one element, it is not possible to
-//! implement the `FromInterator` trait for it. We can't know, in general, if
+//! implement the `FromIterator` trait for it. We can't know, in general, if
 //! any given `Iterator` actually contains something.
 //!
 //! # Features
@@ -480,7 +480,7 @@ impl<T> NonEmpty<T> {
     }
 
     /// Deconstruct a `NonEmpty` into its head and tail.
-    /// This operation never fails since we are guranteed
+    /// This operation never fails since we are guaranteed
     /// to have a head element.
     ///
     /// # Example Use
