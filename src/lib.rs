@@ -909,6 +909,40 @@ impl<T> NonEmpty<T> {
     {
         self.minimum_by(|i, j| f(i).cmp(&f(j)))
     }
+
+    /// Sorts the nonempty.
+    ///
+    /// The implementation uses [`slice::sort`](slice::sort) for the tail and then checks where the
+    /// head belongs. If the head is already the smallest element, this should be as fast as sorting a
+    /// slice. However, if the head needs to be inserted, then it incurs extra cost for removing
+    /// the new head from the tail and adding the old head at the correct index.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty::nonempty;
+    ///
+    /// let mut non_empty = nonempty![-5, 4, 1, -3, 2];
+    ///
+    /// non_empty.sort();
+    /// assert!(non_empty == nonempty![-5, -3, 1, 2, 4]);
+    /// ```
+    pub fn sort(&mut self)
+    where
+        T: Ord,
+    {
+        self.tail.sort();
+        let index = match self.tail.binary_search(&self.head) {
+            Ok(index) => index,
+            Err(index) => index,
+        };
+
+        if index != 0 {
+            let new_head = self.tail.remove(0);
+            let head = mem::replace(&mut self.head, new_head);
+            self.tail.insert(index - 1, head);
+        }
+    }
 }
 
 impl<T: Default> Default for NonEmpty<T> {
@@ -1138,6 +1172,25 @@ mod tests {
         let target = Position { x: 1, y: 2 };
         let closest = positions.minimum_by_key(|position| position.distance_squared(target));
         assert_eq!(closest, &Position { x: 1, y: 1 });
+    }
+
+    #[test]
+    fn test_sort() {
+        let mut numbers = nonempty![1];
+        numbers.sort();
+        assert_eq!(numbers, nonempty![1]);
+
+        let mut numbers = nonempty![2, 1, 3];
+        numbers.sort();
+        assert_eq!(numbers, nonempty![1, 2, 3]);
+
+        let mut numbers = nonempty![1, 3, 2];
+        numbers.sort();
+        assert_eq!(numbers, nonempty![1, 2, 3]);
+
+        let mut numbers = nonempty![3, 2, 1];
+        numbers.sort();
+        assert_eq!(numbers, nonempty![1, 2, 3]);
     }
 
     #[cfg(feature = "serialize")]
