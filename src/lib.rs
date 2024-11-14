@@ -523,7 +523,7 @@ impl<T> NonEmpty<T> {
     /// Deconstruct a `NonEmpty` into its first, last, and
     /// middle elements, in that order.
     ///
-    /// If there is only one element then first == last.
+    /// If there is only one element then last is `None`.
     ///
     /// # Example Use
     ///
@@ -532,19 +532,20 @@ impl<T> NonEmpty<T> {
     ///
     /// let mut non_empty = NonEmpty::from((1, vec![2, 3, 4, 5]));
     ///
-    /// // Guaranteed to have the last element and the elements
-    /// // preceding it.
-    /// assert_eq!(non_empty.split(), (&1, &[2, 3, 4][..], &5));
+    /// // When there are two or more elements, the last element is represented
+    /// // as a `Some`. Elements preceding it, except for the first, are returned
+    /// // in the middle.
+    /// assert_eq!(non_empty.split(), (&1, &[2, 3, 4][..], Some(&5)));
     ///
     /// let non_empty = NonEmpty::new(1);
     ///
-    /// // Guaranteed to have the last element.
-    /// assert_eq!(non_empty.split(), (&1, &[][..], &1));
+    /// // The last element is `None` when there's only one element.
+    /// assert_eq!(non_empty.split(), (&1, &[][..], None));
     /// ```
-    pub fn split(&self) -> (&T, &[T], &T) {
+    pub fn split(&self) -> (&T, &[T], Option<&T>) {
         match self.tail.split_last() {
-            None => (&self.head, &[], &self.head),
-            Some((last, middle)) => (&self.head, middle, last),
+            None => (&self.head, &[], None),
+            Some((last, middle)) => (&self.head, middle, Some(last)),
         }
     }
 
@@ -1284,6 +1285,17 @@ mod tests {
                     tail: vec![526086],
                 }
             );
+            Ok(())
+        }
+
+        #[test]
+        fn test_arbitrary_with_split() -> arbitrary::Result<()> {
+            let mut u = Unstructured::new(&[1, 2, 3, 4, 5, 6, 7, 8]);
+            let ne = NonEmpty::<i32>::arbitrary(&mut u)?;
+            let (head, middle, last) = ne.split();
+            let mut tail = middle.to_vec();
+            tail.extend(last);
+            assert_eq!(ne, NonEmpty { head: *head, tail });
             Ok(())
         }
     }
