@@ -72,8 +72,11 @@
 //!
 //! * `serialize`: `serde` support.
 //! * `arbitrary`: `arbitrary` support.
+//! * `bincode2`" `bincode@2.0.0-rc.3` support.
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
+#[cfg(feature = "bincode2")]
+use bincode::{Decode, Encode};
 #[cfg(feature = "serialize")]
 use serde::{
     ser::{SerializeSeq, Serializer},
@@ -121,7 +124,12 @@ macro_rules! nonempty {
 /// Non-empty vector.
 #[cfg_attr(feature = "serialize", derive(Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "bincode2", derive(Encode, Decode))]
 #[cfg_attr(feature = "serialize", serde(try_from = "Vec<T>"))]
+#[cfg_attr(feature = "bincode2", bincode(
+    encode_bounds = "T: Encode + 'static",
+    decode_bounds = "T: Decode + 'static",
+))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NonEmpty<T> {
     pub head: T,
