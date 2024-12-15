@@ -1,9 +1,9 @@
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
-use std::num::NonZeroUsize;
+use core::num::NonZeroUsize;
 
 /// A non-empty list which statically guarantees certain operations
-/// cannot return zero, using [`std::num::NonZeroUsize`].
+/// cannot return zero, using [`core::num::NonZeroUsize`].
 ///
 /// *Experimental*
 ///
@@ -35,7 +35,7 @@ impl<T> From<super::NonEmpty<T>> for NonEmpty<T> {
     }
 }
 
-impl<T> std::ops::Deref for NonEmpty<T> {
+impl<T> core::ops::Deref for NonEmpty<T> {
     type Target = super::NonEmpty<T>;
 
     fn deref(&self) -> &Self::Target {
@@ -43,7 +43,7 @@ impl<T> std::ops::Deref for NonEmpty<T> {
     }
 }
 
-impl<T> std::ops::DerefMut for NonEmpty<T> {
+impl<T> core::ops::DerefMut for NonEmpty<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
@@ -54,7 +54,7 @@ mod tests {
     use crate::nonzero;
     use crate::NonEmpty;
 
-    use std::convert::TryInto;
+    use core::convert::TryInto;
 
     #[test]
     fn test_nonzero() {
@@ -69,7 +69,7 @@ mod tests {
         use crate::nonzero;
         use arbitrary::{Arbitrary, Unstructured};
 
-        use std::convert::TryInto;
+        use core::convert::TryInto;
 
         #[test]
         fn test_nonzero_arbitrary_empty_tail() -> arbitrary::Result<()> {

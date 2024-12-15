@@ -19,6 +19,8 @@
 //! The simplest way to construct a [`NonEmpty`] is via the [`nonempty`] macro:
 //!
 //! ```
+//! # extern crate alloc;
+//! # use alloc::vec::Vec;
 //! use nonempty::{NonEmpty, nonempty};
 //!
 //! let l: NonEmpty<u32> = nonempty![1, 2, 3];
@@ -28,6 +30,8 @@
 //! Unlike the familiar `vec!` macro, `nonempty!` requires at least one element:
 //!
 //! ```
+//! # extern crate alloc;
+//! # use alloc::vec::Vec;
 //! use nonempty::nonempty;
 //!
 //! let l = nonempty![1];
@@ -40,6 +44,8 @@
 //! [`NonEmpty::new`] or its constructor:
 //!
 //! ```
+//! # extern crate alloc;
+//! # use alloc::vec::Vec;
 //! use nonempty::NonEmpty;
 //!
 //! let mut l = NonEmpty { head: 42, tail: vec![36, 58] };
@@ -67,7 +73,9 @@
 //! Since `NonEmpty` must have a least one element, it is not possible to
 //! implement the `FromIterator` trait for it. We can't know, in general, if
 //! any given `Iterator` actually contains something.
-//!
+
+#![no_std]
+
 //! # Features
 //!
 //! * `serialize`: `serde` support.
@@ -79,9 +87,17 @@ use serde::{
     ser::{SerializeSeq, Serializer},
     Deserialize, Serialize,
 };
-use std::mem;
-use std::{cmp::Ordering, num::NonZeroUsize};
-use std::{iter, vec};
+
+use core::iter;
+use core::mem;
+use core::{cmp::Ordering, num::NonZeroUsize};
+
+#[cfg(feature = "std")]
+extern crate std;
+
+#[cfg_attr(test, macro_use)]
+extern crate alloc;
+use alloc::vec::{self, Vec};
 
 pub mod nonzero;
 
@@ -89,6 +105,8 @@ pub mod nonzero;
 /// for constructing [`NonEmpty`] values.
 ///
 /// ```
+/// # extern crate alloc;
+/// # use alloc::vec::Vec;
 /// use nonempty::{NonEmpty, nonempty};
 ///
 /// let v = nonempty![1, 2, 3];
@@ -113,7 +131,7 @@ macro_rules! nonempty {
     ($h:expr) => {
         $crate::NonEmpty {
             head: $h,
-            tail: Vec::new(),
+            tail: alloc::vec::Vec::new(),
         }
     };
 }
@@ -984,14 +1002,14 @@ impl<T> IntoIterator for NonEmpty<T> {
 
 impl<'a, T> IntoIterator for &'a NonEmpty<T> {
     type Item = &'a T;
-    type IntoIter = iter::Chain<iter::Once<&'a T>, std::slice::Iter<'a, T>>;
+    type IntoIter = iter::Chain<iter::Once<&'a T>, core::slice::Iter<'a, T>>;
 
     fn into_iter(self) -> Self::IntoIter {
         iter::once(&self.head).chain(self.tail.iter())
     }
 }
 
-impl<T> std::ops::Index<usize> for NonEmpty<T> {
+impl<T> core::ops::Index<usize> for NonEmpty<T> {
     type Output = T;
 
     /// ```
@@ -1012,7 +1030,7 @@ impl<T> std::ops::Index<usize> for NonEmpty<T> {
     }
 }
 
-impl<T> std::ops::IndexMut<usize> for NonEmpty<T> {
+impl<T> core::ops::IndexMut<usize> for NonEmpty<T> {
     fn index_mut(&mut self, index: usize) -> &mut T {
         if index > 0 {
             &mut self.tail[index - 1]
@@ -1030,7 +1048,9 @@ impl<A> Extend<A> for NonEmpty<A> {
 
 #[cfg(feature = "serialize")]
 pub mod serialize {
-    use std::{convert::TryFrom, fmt};
+    use core::{convert::TryFrom, fmt};
+
+    use alloc::vec::Vec;
 
     use super::NonEmpty;
 
@@ -1060,6 +1080,8 @@ pub mod serialize {
 
 #[cfg(test)]
 mod tests {
+    use alloc::{string::String, vec::Vec};
+
     use crate::NonEmpty;
 
     #[test]
@@ -1128,7 +1150,7 @@ mod tests {
 
     #[test]
     fn test_to_nonempty() {
-        use std::iter::{empty, once};
+        use core::iter::{empty, once};
 
         assert_eq!(NonEmpty::<()>::collect(empty()), None);
         assert_eq!(NonEmpty::<()>::collect(once(())), Some(NonEmpty::new(())));
@@ -1196,13 +1218,14 @@ mod tests {
     #[cfg(feature = "serialize")]
     mod serialize {
         use crate::NonEmpty;
+        use alloc::boxed::Box;
         use serde::{Deserialize, Serialize};
 
         #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
         pub struct SimpleSerializable(pub i32);
 
         #[test]
-        fn test_simple_round_trip() -> Result<(), Box<dyn std::error::Error>> {
+        fn test_simple_round_trip() -> Result<(), Box<dyn core::error::Error>> {
             // Given
             let mut non_empty = NonEmpty::new(SimpleSerializable(42));
             non_empty.push(SimpleSerializable(777));
@@ -1219,7 +1242,7 @@ mod tests {
         }
 
         #[test]
-        fn test_serialization() -> Result<(), Box<dyn std::error::Error>> {
+        fn test_serialization() -> Result<(), Box<dyn core::error::Error>> {
             let ne = nonempty![1, 2, 3, 4, 5];
             let ve = vec![1, 2, 3, 4, 5];
 
