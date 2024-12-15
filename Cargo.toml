@@ -3,16 +3,18 @@ name = "nonempty"
 version = "0.10.0"
 description = "Correct by construction non-empty vector"
 authors = ["Alexis Sellier <self@cloudhead.io>"]
-edition = "2018"
+edition = "2021"
 license = "MIT"
 repository = "https://github.com/cloudhead/nonempty"
 
 [dependencies]
-serde = { features = ["serde_derive"], optional = true, version = "1" }
+serde = { features = ["derive", "alloc"], default-features = false, optional = true, version = "1" }
 arbitrary = { features = ["derive"], optional = true, version = "1" }
 
 [features]
-serialize = ["serde"]
+default = ["std"]
+std = []
+serialize = ["dep:serde"]
 arbitrary = ["dep:arbitrary"]
 
 [dev-dependencies]
