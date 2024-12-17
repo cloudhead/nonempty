@@ -167,7 +167,7 @@ impl<'a, T> Iterator for Iter<'a, T> {
     }
 }
 
-impl<'a, T> DoubleEndedIterator for Iter<'a, T> {
+impl<T> DoubleEndedIterator for Iter<'_, T> {
     fn next_back(&mut self) -> Option<Self::Item> {
         if let Some((last, rest)) = self.tail.split_last() {
             self.tail = rest;
@@ -180,13 +180,13 @@ impl<'a, T> DoubleEndedIterator for Iter<'a, T> {
     }
 }
 
-impl<'a, T> ExactSizeIterator for Iter<'a, T> {
+impl<T> ExactSizeIterator for Iter<'_, T> {
     fn len(&self) -> usize {
         self.tail.len() + self.head.map_or(0, |_| 1)
     }
 }
 
-impl<'a, T> core::iter::FusedIterator for Iter<'a, T> {}
+impl<T> core::iter::FusedIterator for Iter<'_, T> {}
 
 impl<T> NonEmpty<T> {
     /// Alias for [`NonEmpty::singleton`].
@@ -194,7 +194,7 @@ impl<T> NonEmpty<T> {
         Self::singleton(e)
     }
 
-    /// Converts from &NonEmpty<T> to NonEmpty<&T>.
+    /// Converts from `&NonEmpty<T>` to `NonEmpty<&T>`.
     pub fn as_ref(&self) -> NonEmpty<&T> {
         NonEmpty {
             head: &self.head,
@@ -696,7 +696,7 @@ impl<T> NonEmpty<T> {
     /// # Examples
     ///
     /// Looks up a series of four elements. The first is found, with a uniquely determined
-    /// position; the second and third are not found; the fourth could match any position in [1,4].
+    /// position; the second and third are not found; the fourth could match any position in `[1,4]`.
     ///
     /// ```
     /// use nonempty::NonEmpty;
@@ -827,9 +827,9 @@ impl<T> NonEmpty<T> {
     /// let non_empty = NonEmpty::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
     /// assert_eq!(non_empty.maximum_by(|(k, _), (l, _)| k.cmp(l)), &(4, 42));
     /// ```
-    pub fn maximum_by<'a, F>(&'a self, mut compare: F) -> &T
+    pub fn maximum_by<F>(&self, mut compare: F) -> &T
     where
-        F: FnMut(&'a T, &'a T) -> Ordering,
+        F: FnMut(&T, &T) -> Ordering,
     {
         let mut max = &self.head;
         for i in self.tail.iter() {
@@ -855,9 +855,9 @@ impl<T> NonEmpty<T> {
     /// let non_empty = NonEmpty::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
     /// assert_eq!(non_empty.minimum_by(|(k, _), (l, _)| k.cmp(l)), &(0, 76));
     /// ```
-    pub fn minimum_by<'a, F>(&'a self, mut compare: F) -> &T
+    pub fn minimum_by<F>(&self, mut compare: F) -> &T
     where
-        F: FnMut(&'a T, &'a T) -> Ordering,
+        F: FnMut(&T, &T) -> Ordering,
     {
         self.maximum_by(|a, b| compare(a, b).reverse())
     }
@@ -872,16 +872,16 @@ impl<T> NonEmpty<T> {
     /// use nonempty::NonEmpty;
     ///
     /// let non_empty = NonEmpty::new((0, 42));
-    /// assert_eq!(non_empty.maximum_by_key(|(k, _)| k), &(0, 42));
+    /// assert_eq!(non_empty.maximum_by_key(|(k, _)| *k), &(0, 42));
     ///
     /// let non_empty = NonEmpty::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
-    /// assert_eq!(non_empty.maximum_by_key(|(k, _)| k), &(4, 42));
+    /// assert_eq!(non_empty.maximum_by_key(|(k, _)| *k), &(4, 42));
     /// assert_eq!(non_empty.maximum_by_key(|(k, _)| -k), &(0, 76));
     /// ```
-    pub fn maximum_by_key<'a, U, F>(&'a self, mut f: F) -> &T
+    pub fn maximum_by_key<U, F>(&self, mut f: F) -> &T
     where
         U: Ord,
-        F: FnMut(&'a T) -> U,
+        F: FnMut(&T) -> U,
     {
         self.maximum_by(|i, j| f(i).cmp(&f(j)))
     }
@@ -896,16 +896,16 @@ impl<T> NonEmpty<T> {
     /// use nonempty::NonEmpty;
     ///
     /// let non_empty = NonEmpty::new((0, 42));
-    /// assert_eq!(non_empty.minimum_by_key(|(k, _)| k), &(0, 42));
+    /// assert_eq!(non_empty.minimum_by_key(|(k, _)| *k), &(0, 42));
     ///
     /// let non_empty = NonEmpty::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
-    /// assert_eq!(non_empty.minimum_by_key(|(k, _)| k), &(0, 76));
+    /// assert_eq!(non_empty.minimum_by_key(|(k, _)| *k), &(0, 76));
     /// assert_eq!(non_empty.minimum_by_key(|(k, _)| -k), &(4, 42));
     /// ```
-    pub fn minimum_by_key<'a, U, F>(&'a self, mut f: F) -> &T
+    pub fn minimum_by_key<U, F>(&self, mut f: F) -> &T
     where
         U: Ord,
-        F: FnMut(&'a T) -> U,
+        F: FnMut(&T) -> U,
     {
         self.minimum_by(|i, j| f(i).cmp(&f(j)))
     }
