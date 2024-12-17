@@ -126,10 +126,13 @@ macro_rules! nonempty {
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "bincode2", derive(Encode, Decode))]
 #[cfg_attr(feature = "serialize", serde(try_from = "Vec<T>"))]
-#[cfg_attr(feature = "bincode2", bincode(
-    encode_bounds = "T: Encode + 'static",
-    decode_bounds = "T: Decode + 'static",
-))]
+#[cfg_attr(
+    feature = "bincode2",
+    bincode(
+        encode_bounds = "T: Encode + 'static",
+        decode_bounds = "T: Decode + 'static",
+    )
+)]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NonEmpty<T> {
     pub head: T,
