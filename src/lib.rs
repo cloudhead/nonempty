@@ -104,6 +104,11 @@ use alloc::vec::{self, Vec};
 
 pub mod nonzero;
 
+#[doc(hidden)]
+pub mod __macro_support {
+    pub use alloc::vec;
+}
+
 /// Like the `vec!` macro, but enforces at least one argument. A nice short-hand
 /// for constructing [`NonEmpty`] values.
 ///
@@ -128,13 +133,13 @@ pub mod nonzero;
 #[macro_export]
 macro_rules! nonempty {
     ($h:expr, $( $x:expr ),* $(,)?) => {{
-        let tail = vec![$($x),*];
+        let tail = $crate::__macro_support::vec![$($x),*];
         $crate::NonEmpty { head: $h, tail }
     }};
     ($h:expr) => {
         $crate::NonEmpty {
             head: $h,
-            tail: alloc::vec::Vec::new(),
+            tail: $crate::__macro_support::vec![],
         }
     };
 }
