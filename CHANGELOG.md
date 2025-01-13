@@ -6,7 +6,14 @@ and this library adheres to Rust's notion of
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## 0.12.0
+
+### Added
+- `bincode` feature flag to enable the use of `bincode-2.0.0`.
+
+### Changed
 - `NonEmpty::capacity` returns `NonZeroUsize`
+- Fixed the `nonempty!` macro to use the `vec!` macro internally, ensuring that
+  it compiles with `std` and `no_std`.
 
 ## 0.11.0
 
