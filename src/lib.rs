@@ -349,8 +349,8 @@ impl<T> NonEmpty<T> {
     }
 
     /// Get the capacity of the list.
-    pub fn capacity(&self) -> usize {
-        self.tail.capacity() + 1
+    pub fn capacity(&self) -> NonZeroUsize {
+        NonZeroUsize::MIN.saturating_add(self.tail.capacity())
     }
 
     /// Get the last element. Never fails.
