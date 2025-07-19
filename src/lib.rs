@@ -71,8 +71,8 @@
 //! # Caveats
 //!
 //! Since `NonEmpty` must have a least one element, it is not possible to
-//! implement the `FromIterator` trait for it. We can't know, in general, if
-//! any given `Iterator` actually contains something.
+//! implement the [`FromIterator`] trait for it. We can't know, in general, if
+//! any given [`Iterator`] actually contains something.
 
 #![no_std]
 
