@@ -80,10 +80,10 @@
 //!
 //! * `serialize`: `serde` support.
 //! * `arbitrary`: `arbitrary` support.
-//! * `bincode2`" `bincode@2.0.0-rc.3` support.
+//! * `bincode`" `bincode` support.
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
-#[cfg(feature = "bincode2")]
+#[cfg(feature = "bincode")]
 use bincode::{Decode, Encode};
 #[cfg(feature = "serialize")]
 use serde::{
@@ -142,15 +142,8 @@ macro_rules! nonempty {
 /// Non-empty vector.
 #[cfg_attr(feature = "serialize", derive(Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-#[cfg_attr(feature = "bincode2", derive(Encode, Decode))]
 #[cfg_attr(feature = "serialize", serde(try_from = "Vec<T>"))]
-#[cfg_attr(
-    feature = "bincode2",
-    bincode(
-        encode_bounds = "T: Encode + 'static",
-        decode_bounds = "T: Decode + 'static",
-    )
-)]
+#[cfg_attr(feature = "bincode", derive(Encode, Decode))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NonEmpty<T> {
     pub head: T,
@@ -1259,6 +1252,34 @@ mod tests {
             let ve = vec![1, 2, 3, 4, 5];
 
             assert_eq!(serde_json::to_string(&ne)?, serde_json::to_string(&ve)?);
+
+            Ok(())
+        }
+    }
+
+    #[cfg(feature = "bincode")]
+    mod bincode {
+        use crate::NonEmpty;
+        use alloc::boxed::Box;
+
+        #[derive(Clone, Debug, Eq, PartialEq, bincode::Encode, bincode::Decode)]
+        pub struct SimpleSerializable(pub i32);
+
+        #[test]
+        fn test_simple_round_trip() -> Result<(), Box<dyn core::error::Error>> {
+            // Given
+            let mut non_empty = NonEmpty::new(SimpleSerializable(42));
+            non_empty.push(SimpleSerializable(777));
+
+            // When
+            let config = bincode::config::standard();
+            let (res, _) = bincode::decode_from_slice::<NonEmpty<SimpleSerializable>, _>(
+                &bincode::encode_to_vec(non_empty.clone(), config)?,
+                config,
+            )?;
+
+            // Then
+            assert_eq!(res, non_empty);
 
             Ok(())
         }
