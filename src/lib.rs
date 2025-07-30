@@ -355,10 +355,35 @@ impl<T> NonEmpty<T> {
         }
     }
 
+    /// Removes an element from the vector, shifting all elements after it to the left.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the index is out of bounds or the tail vector is empty.
     pub fn remove(&mut self, index: usize) -> T {
         self.checked_remove(index).unwrap()
     }
 
+    /// Checks if the element at a certain index can be removed from the vector, then removes it,
+    /// shifting all elements after it to the left.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` if the index is out of bounds or the tail vector is empty.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let mut non_empty = nonempty![1, 2, 3];
+    /// assert_eq!(non_empty.checked_remove(1), Ok(2));
+    /// assert_eq!(non_empty, nonempty![1, 3]);
+    /// assert_eq!(non_empty.checked_remove(3), Err(RemoveError::IndexOutOfBounds { index: 3, len: 2 }));
+    /// assert_eq!(non_empty.checked_remove(0), Ok(1));
+    /// assert_eq!(non_empty, nonempty![3]);
+    /// assert_eq!(non_empty.checked_remove(0), Err(RemoveError::LengthOne));
+    /// ```
     pub fn checked_remove(&mut self, index: usize) -> Result<T, RemoveError> {
         if self.tail.is_empty() {
             return Err(RemoveError::LengthOne);
@@ -373,10 +398,33 @@ impl<T> NonEmpty<T> {
         }
     }
 
+    /// Removes an element from the vector, replacing it with the last element.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the index is out of bounds or the tail vector is empty.
     pub fn swap_remove(&mut self, index: usize) -> T {
         self.checked_swap_remove(index).unwrap()
     }
 
+    /// Checks if the element at a certain index can be removed from the vector, then removes it, replacing it with the last element.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` if the index is out of bounds or the tail vector is empty.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let mut non_empty = nonempty![1, 2, 3, 4];
+    /// assert_eq!(non_empty.checked_swap_remove(1), Ok(2));
+    /// assert_eq!(non_empty, nonempty![1, 4, 3]);
+    /// assert_eq!(non_empty.checked_swap_remove(3), Err(RemoveError::IndexOutOfBounds { index: 3, len: 3 }));
+    /// assert_eq!(non_empty.checked_swap_remove(0), Ok(1));
+    /// assert_eq!(non_empty, nonempty![3, 4]);
+    /// ```
     pub fn checked_swap_remove(&mut self, index: usize) -> Result<T, RemoveError> {
         if self.tail.is_empty() {
             return Err(RemoveError::LengthOne);
