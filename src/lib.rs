@@ -91,6 +91,7 @@ use serde::{
     Deserialize, Serialize,
 };
 
+use core::fmt;
 use core::iter;
 use core::mem;
 use core::{cmp::Ordering, num::NonZeroUsize};
@@ -215,6 +216,22 @@ impl<T> ExactSizeIterator for Iter<'_, T> {
 
 impl<T> core::iter::FusedIterator for Iter<'_, T> {}
 
+pub enum RemoveError {
+    LengthOne,
+    IndexOutOfBounds { index: usize, len: usize },
+}
+
+impl fmt::Debug for RemoveError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::LengthOne => write!(f, "Cannot remove from NonEmpty of length 1"),
+            Self::IndexOutOfBounds { index, len } => {
+                write!(f, "removal index ({index}) should be < len ({len})")
+            }
+        }
+    }
+}
+
 impl<T> NonEmpty<T> {
     /// Alias for [`NonEmpty::singleton`].
     pub const fn new(e: T) -> Self {
@@ -335,6 +352,42 @@ impl<T> NonEmpty<T> {
             self.tail.insert(0, head);
         } else {
             self.tail.insert(index - 1, element);
+        }
+    }
+
+    pub fn remove(&mut self, index: usize) -> T {
+        self.checked_remove(index).unwrap()
+    }
+
+    pub fn checked_remove(&mut self, index: usize) -> Result<T, RemoveError> {
+        if self.tail.is_empty() {
+            return Err(RemoveError::LengthOne);
+        }
+        let len = self.len();
+        if index >= len {
+            return Err(RemoveError::IndexOutOfBounds { index, len });
+        }
+        match index.checked_sub(1) {
+            None => Ok(mem::replace(&mut self.head, self.tail.remove(0))),
+            Some(tail_index) => Ok(self.tail.remove(tail_index)),
+        }
+    }
+
+    pub fn swap_remove(&mut self, index: usize) -> T {
+        self.checked_swap_remove(index).unwrap()
+    }
+
+    pub fn checked_swap_remove(&mut self, index: usize) -> Result<T, RemoveError> {
+        if self.tail.is_empty() {
+            return Err(RemoveError::LengthOne);
+        }
+        let len = self.len();
+        if index >= len {
+            return Err(RemoveError::IndexOutOfBounds { index, len });
+        }
+        match index.checked_sub(1) {
+            None => Ok(mem::replace(&mut self.head, self.tail.pop().unwrap())),
+            Some(tail_index) => Ok(self.tail.swap_remove(tail_index)),
         }
     }
 
