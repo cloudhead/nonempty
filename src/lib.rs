@@ -971,6 +971,12 @@ impl<T> NonEmpty<T> {
             self.tail.insert(index - 1, head);
         }
     }
+
+    #[cfg(feature = "random")]
+    pub fn choose(&self, rng: &mut impl rand::Rng) -> &T {
+        let index = rng.random_range(0..self.len());
+        self.get(index).unwrap()
+    }
 }
 
 impl<T: Default> Default for NonEmpty<T> {
