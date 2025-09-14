@@ -1056,6 +1056,26 @@ impl<A> Extend<A> for NonEmpty<A> {
     }
 }
 
+impl<T, const S: usize> From<[T; S]> for NonEmpty<T> {
+    fn from(array: [T; S]) -> Self {
+        const {
+            if S == 0 {
+                panic!("tried to construct NonEmpty from an empty array")
+            }
+        }
+
+        let mut iter = array.into_iter();
+
+        // SAFETY: we know that S is not 0, so we can safely unwrap
+        let head = iter.next().unwrap();
+
+        NonEmpty {
+            head,
+            tail: iter.collect(),
+        }
+    }
+}
+
 #[cfg(feature = "serialize")]
 pub mod serialize {
     use core::{convert::TryFrom, fmt};
