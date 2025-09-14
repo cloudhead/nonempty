@@ -1056,6 +1056,25 @@ impl<A> Extend<A> for NonEmpty<A> {
     }
 }
 
+impl<T, const S: usize> From<[T; S]> for NonEmpty<T> {
+    fn from(array: [T; S]) -> Self {
+        use alloc::collections::VecDeque;
+        const {
+            if S == 0 {
+                panic!("tried to construct NonEmpty from an empty array")
+            }
+        }
+
+        let mut vec = VecDeque::from(array);
+
+        // SAFETY: we know that S is not 0, so we can safely unwrap
+        NonEmpty {
+            head: vec.pop_front().unwrap(),
+            tail: vec.into(),
+        }
+    }
+}
+
 #[cfg(feature = "serialize")]
 pub mod serialize {
     use core::{convert::TryFrom, fmt};
@@ -1093,6 +1112,22 @@ mod tests {
     use alloc::{string::String, vec::Vec};
 
     use crate::NonEmpty;
+
+    #[test]
+    fn test_const_array_construction() {
+        let xs: [usize; 2] = [1, 2];
+        let expected = nonempty![1, 2];
+        assert_eq!(NonEmpty::from(xs), expected);
+
+        // N.b. uncommenting this below, rightfully, panics the evaluation of
+        // the program. This being left here for anyone to prove to themselves
+        // that this does indeed panic. Unfortunately, `#[should_panic]` does
+        // not work in this case, since the panic happens at evaluation time –
+        // due to the `const` – rather than run time.
+
+        // let xs: [usize; 0] = [];
+        // let _ = NonEmpty::from(xs);
+    }
 
     #[test]
     fn test_from_conversion() {
