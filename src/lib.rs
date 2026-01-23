@@ -278,7 +278,7 @@ impl<T> NonEmpty<T> {
     /// *head *= 42;
     /// assert_eq!(non_empty.first(), &42);
     /// ```
-    pub fn first_mut(&mut self) -> &mut T {
+    pub const fn first_mut(&mut self) -> &mut T {
         &mut self.head
     }
 
@@ -339,17 +339,17 @@ impl<T> NonEmpty<T> {
     }
 
     /// Get the length of the list.
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.tail.len() + 1
     }
 
     /// Gets the length of the list as a NonZeroUsize.
-    pub fn len_nonzero(&self) -> NonZeroUsize {
+    pub const fn len_nonzero(&self) -> NonZeroUsize {
         unsafe { NonZeroUsize::new_unchecked(self.tail.len().saturating_add(1)) }
     }
 
     /// Get the capacity of the list.
-    pub fn capacity(&self) -> NonZeroUsize {
+    pub const fn capacity(&self) -> NonZeroUsize {
         NonZeroUsize::MIN.saturating_add(self.tail.capacity())
     }
 
