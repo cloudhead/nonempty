@@ -14,12 +14,12 @@ pub struct NonEmpty<T>(super::NonEmpty<T>);
 
 impl<T> NonEmpty<T> {
     /// Get the length of the list.
-    pub fn len(&self) -> NonZeroUsize {
+    pub const fn len(&self) -> NonZeroUsize {
         unsafe { NonZeroUsize::new_unchecked(self.0.tail.len() + 1) }
     }
 
     /// Get the capacity of the list.
-    pub fn capacity(&self) -> NonZeroUsize {
+    pub const fn capacity(&self) -> NonZeroUsize {
         unsafe { NonZeroUsize::new_unchecked(self.0.tail.capacity() + 1) }
     }
 
