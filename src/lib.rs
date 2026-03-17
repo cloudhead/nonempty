@@ -252,7 +252,7 @@ impl<T> NonEmpty<T> {
     /// # Examples
     ///
     /// ```
-    /// let mut vec = NonEmpty::new_with_capacity(1, 10).unwrap();
+    /// let mut vec = NonEmpty::new_with_capacity(1, NonZeroUsize::new(10).unwrap());
     ///
     /// // The vector contains one item, even though it has capacity for more
     /// assert_eq!(vec.len(), 1);
@@ -272,19 +272,16 @@ impl<T> NonEmpty<T> {
     ///
     /// // A vector of a zero-sized type will always over-allocate, since no
     /// // allocation is necessary
-    /// let vec_units = NonEmpty::<()>::new_with_capacity((), 10).unwrap();
+    /// let vec_units = NonEmpty::<()>::new_with_capacity((), NonZeroUsize::new(10).unwrap());
     /// assert_eq!(vec_units.capacity(), NonZeroUsize::MAX);
     /// ```
     #[inline]
     #[must_use]
-    pub fn new_with_capacity(head: T, capacity: usize) -> Result<Self, &'static str> {
-        if capacity == 0 {
-            return Err("capacity must be at least 1");
-        }
-        Ok(Self {
+    pub fn new_with_capacity(head: T, capacity: NonZeroUsize) -> Self {
+        Self {
             head,
-            tail: Vec::with_capacity(capacity),
-        })
+            tail: Vec::with_capacity(capacity.get() - 1),
+        }
     }
 
     /// Converts from `&NonEmpty<T>` to `NonEmpty<&T>`.
@@ -1173,26 +1170,25 @@ mod tests {
 
     #[test]
     fn test_new_with_capacity() {
-        let wrong_capacity = NonEmpty::new_with_capacity(1, 0);
-        assert!(wrong_capacity.is_err());
-
-        let mut vec = NonEmpty::new_with_capacity(1, 10).unwrap();
+        let nz_10 = NonZeroUsize::new(10).unwrap();
+        let mut vec = NonEmpty::new_with_capacity(1, nz_10);
 
         assert_eq!(vec.len(), 1);
-        assert!(vec.capacity().get() >= 10);
+        assert!(vec.capacity() >= nz_10);
 
         for i in 0..10 {
             vec.push(i);
         }
-
+        let nz_11 = nz_10.saturating_add(1);
         assert_eq!(vec.len(), 11);
-        assert!(vec.capacity().get() >= 11);
+        assert!(vec.capacity() >= nz_11);
 
+        let nz_12 = nz_11.saturating_add(1);
         vec.push(11);
         assert_eq!(vec.len(), 12);
-        assert!(vec.capacity().get() >= 12);
+        assert!(vec.capacity() >= nz_12);
 
-        let vec_units = NonEmpty::<()>::new_with_capacity((), 10).unwrap();
+        let vec_units = NonEmpty::<()>::new_with_capacity((), nz_10);
         assert_eq!(vec_units.capacity(), NonZeroUsize::MAX);
     }
 
