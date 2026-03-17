@@ -221,6 +221,72 @@ impl<T> NonEmpty<T> {
         Self::singleton(e)
     }
 
+    /// Constructs a new `NonEmpty<T>` with at least the specified capacity.
+    ///
+    /// The vector will be able to hold at least `capacity` elements without
+    /// reallocating. This method is allowed to allocate for more elements than
+    /// `capacity`. If `capacity` is one, the vector will not allocate.
+    ///
+    /// It is important to note that although the returned vector has the
+    /// minimum *capacity* specified, the vector will have a zero *length*. For
+    /// an explanation of the difference between length and capacity, see
+    /// *[Capacity and reallocation]*.
+    ///
+    /// If it is important to know the exact allocated capacity of a `Vec`,
+    /// always use the [`capacity`] method after construction.
+    ///
+    /// For `NonEmpty<T>` where `T` is a zero-sized type, there will be no allocation
+    /// and the capacity will always be `usize::MAX`.
+    ///
+    /// [Capacity and reallocation]: #capacity-and-reallocation
+    /// [`capacity`]: Vec::capacity
+    ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity exceeds `isize::MAX` _bytes_.
+    ///
+    /// # Errors
+    ///
+    /// With return Err if `capacity` is 0.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut vec = NonEmpty::new_with_capacity(1, 10).unwrap();
+    ///
+    /// // The vector contains one item, even though it has capacity for more
+    /// assert_eq!(vec.len(), 1);
+    /// assert!(vec.capacity().get() >= 10);
+    ///
+    /// // These are all done without reallocating...
+    /// for i in 0..10 {
+    ///     vec.push(i);
+    /// }
+    /// assert_eq!(vec.len(), 11);
+    /// assert!(vec.capacity().get() >= 11);
+    ///
+    /// // ...but this may make the vector reallocate
+    /// vec.push(11);
+    /// assert_eq!(vec.len(), 12);
+    /// assert!(vec.capacity().get() >= 12);
+    ///
+    /// // A vector of a zero-sized type will always over-allocate, since no
+    /// // allocation is necessary
+    /// let vec_units = NonEmpty::<()>::new_with_capacity((), 10).unwrap();
+    /// assert_eq!(vec_units.capacity(), NonZeroUsize::MAX);
+    /// ```
+    #[inline]
+    #[must_use]
+    pub fn new_with_capacity(head: T, capacity: usize) -> Result<Self, &'static str> {
+        if capacity == 0 {
+            return Err("capacity must be at least 1");
+        }
+        Ok(Self {
+            head,
+            tail: Vec::with_capacity(capacity),
+        })
+    }
+
     /// Converts from `&NonEmpty<T>` to `NonEmpty<&T>`.
     pub fn as_ref(&self) -> NonEmpty<&T> {
         NonEmpty {
@@ -423,7 +489,7 @@ impl<T> NonEmpty<T> {
     /// assert_eq!(l_iter.next(), Some(&58));
     /// assert_eq!(l_iter.next(), None);
     /// ```
-    pub fn iter(&self) -> Iter<T> {
+    pub fn iter(&self) -> Iter<'_, T> {
         Iter {
             head: Some(&self.head),
             tail: &self.tail,
@@ -1091,6 +1157,7 @@ pub mod serialize {
 #[cfg(test)]
 mod tests {
     use alloc::{string::String, vec::Vec};
+    use core::num::NonZeroUsize;
 
     use crate::NonEmpty;
 
@@ -1102,6 +1169,31 @@ mod tests {
             tail: vec![2, 3, 4, 5],
         };
         assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_new_with_capacity() {
+        let wrong_capacity = NonEmpty::new_with_capacity(1, 0);
+        assert!(wrong_capacity.is_err());
+
+        let mut vec = NonEmpty::new_with_capacity(1, 10).unwrap();
+
+        assert_eq!(vec.len(), 1);
+        assert!(vec.capacity().get() >= 10);
+
+        for i in 0..10 {
+            vec.push(i);
+        }
+
+        assert_eq!(vec.len(), 11);
+        assert!(vec.capacity().get() >= 11);
+
+        vec.push(11);
+        assert_eq!(vec.len(), 12);
+        assert!(vec.capacity().get() >= 12);
+
+        let vec_units = NonEmpty::<()>::new_with_capacity((), 10).unwrap();
+        assert_eq!(vec_units.capacity(), NonZeroUsize::MAX);
     }
 
     #[test]
