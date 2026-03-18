@@ -232,7 +232,7 @@ impl<T> NonEmpty<T> {
     /// an explanation of the difference between length and capacity, see
     /// *[Capacity and reallocation]*.
     ///
-    /// If it is important to know the exact allocated capacity of a `Vec`,
+    /// If it is important to know the exact allocated capacity of a `NonEmpty`,
     /// always use the [`capacity`] method after construction.
     ///
     /// For `NonEmpty<T>` where `T` is a zero-sized type, there will be no allocation
