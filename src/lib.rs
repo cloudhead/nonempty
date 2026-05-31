@@ -529,8 +529,8 @@ impl<T> NonEmpty<T> {
         (&self.head, &self.tail)
     }
 
-    /// Deconstruct a `NonEmpty` into its first, last, and
-    /// middle elements, in that order.
+    /// Deconstruct a `NonEmpty` into its first, middle, and
+    /// last elements, in that order.
     ///
     /// If there is only one element then last is `None`.
     ///
