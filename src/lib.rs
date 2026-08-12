@@ -605,6 +605,31 @@ impl<T> NonEmpty<T> {
         }
     }
 
+    /// Similar functionality as [`NonEmpty::map`], but enumerated.
+    /// 
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty::NonEmpty;
+    ///
+    /// let non_empty = NonEmpty::from((1, vec![2, 3, 4, 5]));
+    ///
+    /// let indices = non_empty.enumerated_map(|index, i| index);
+    ///
+    /// let expected = NonEmpty::from((0, vec![1, 2, 3, 4]));
+    ///
+    /// assert_eq!(indices, expected);
+    /// ```
+    pub fn enumerated_map<U, F>(self, mut f: F) -> NonEmpty<U>
+    where
+        F: FnMut((usize, T)) -> U,
+    {
+        NonEmpty {
+            head: f((0, self.head)),
+            tail: self.tail.into_iter().enumerate().map(f).collect(),
+        }
+    }
+
     /// A structure preserving, fallible mapping function.
     pub fn try_map<E, U, F>(self, mut f: F) -> Result<NonEmpty<U>, E>
     where
